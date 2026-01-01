@@ -1,0 +1,31 @@
+# Python / Django
+__pycache__/
+*.py[cod]
+*$py.class
+env/
+venv/
+.env
+db.sqlite3
+
+# AI Models & Weights (Large files)
+*.pt
+*.h5
+*.tflite
+*.weights
+
+# Verification Data & Uploads
+verified_biomass/
+uploads/
+temp_*.jpg
+
+# Editor / IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# Node (Frontend dev)
+node_modules/

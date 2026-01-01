@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>India CO2 | National Carbon Registry</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <div class="brand-section">
+            <div class="logo-icon"><i class="fas fa-leaf"></i></div>
+            <div class="logo-text">
+                <h2>INDIA CO2</h2>
+                <small>Digital Twin Registry</small>
+            </div>
+        </div>
+
+        <nav class="main-menu">
+            <div class="menu-category">PORTALS</div>
+            <button class="nav-btn active" onclick="switchInterface('farmer')" id="nav-farmer">
+                <i class="fas fa-tractor"></i> <span>Farmer Node</span>
+            </button>
+            <button class="nav-btn" onclick="switchInterface('industrialist')" id="nav-indus">
+                <i class="fas fa-industry"></i> <span>Industrialist</span>
+            </button>
+
+            <div class="menu-category">NETWORK STATUS</div>
+            <div class="status-card">
+                <div class="status-item"><span class="dot online"></span> Sepolia Testnet</div>
+                <div class="status-item"><i class="fas fa-cube"></i> Block: <span id="block-num">Loading...</span></div>
+            </div>
+        </nav>
+
+        <div class="user-profile">
+            <img src="https://ui-avatars.com/api/?name=Kavya+Joshi&background=10b981&color=fff" alt="User">
+            <div>
+                <strong id="current-user-name">Kavya Joshi</strong>
+                <small id="current-user-role">Farmer</small>
+            </div>
+        </div>
+    </aside>
+
+    <main class="app-container">
+        <header class="top-bar">
+            <h1 id="page-heading">Farm Verification Console</h1>
+            <div class="header-actions">
+                <div class="wallet-badge">
+                    <i class="fab fa-ethereum"></i>
+                    <span id="wallet-address">0x1E0e...6bAE</span>
+                </div>
+            </div>
+        </header>
+
+        <section id="view-farmer" class="interface-section">
+            <div class="grid-layout">
+                <div class="card form-card">
+                    <div class="card-header"><i class="fas fa-id-card"></i>
+                        <h3>Farmer Details</h3>
+                    </div>
+                    <form onsubmit="return false;">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" value="Kavya Joshi" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Crop Type</label>
+                            <select>
+                                <option>Agro-Forestry (Mangrove)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Est. Area (Acres)</label>
+                            <input type="number" id="inp-area" value="2.5">
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card sensor-card">
+                    <div class="card-header"><i class="fas fa-satellite"></i>
+                        <h3>Digital Verification</h3>
+                    </div>
+
+                    <div class="sensor-module">
+                        <label>Step 1: Geo-Tagging (Batch Lock)</label>
+                        <div class="gps-box">
+                            <button class="btn-secondary" onclick="captureGPS()"><i
+                                    class="fas fa-location-crosshairs"></i> Capture Coordinates</button>
+                            <div id="gps-result" class="hidden">
+                                <div class="gps-data">
+                                    <span>LAT: <strong id="val-lat">--</strong></span>
+                                    <span>LON: <strong id="val-lon">--</strong></span>
+                                </div>
+                                <small class="verified-badge"><i class="fas fa-check"></i> Satellite Lock Active</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sensor-module">
+                        <label>Step 2: Biomass Evidence</label>
+
+                        <!-- Mode Toggle -->
+                        <div class="upload-options" style="margin-bottom: 10px; display: flex; gap: 10px;">
+                            <button id="btn-mode-file" class="btn-secondary active" onclick="setUploadMode('file')"><i
+                                    class="fas fa-file-upload"></i> Upload File</button>
+                            <button id="btn-mode-camera" class="btn-secondary" onclick="setUploadMode('camera')"><i
+                                    class="fas fa-camera"></i> Use Camera</button>
+                        </div>
+
+                        <!-- File Upload Section -->
+                        <div id="section-file" class="upload-area"
+                            onclick="document.getElementById('file-upload').click()">
+                            <input type="file" id="file-upload" hidden multiple accept="image/*"
+                                onchange="previewImage(this)">
+                            <div id="upload-prompt">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Upload Field Photos</p>
+                                <small>Select multiple images for batch analysis</small>
+                            </div>
+                            <img id="img-preview" class="hidden" alt="Field Preview">
+                        </div>
+
+                        <!-- Camera Capture Section -->
+                        <div id="section-camera" class="camera-box hidden"
+                            style="text-align: center; border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; background: rgba(0,0,0,0.2);">
+                            <video id="cameraPreview" autoplay playsinline
+                                style="width: 100%; border-radius: 8px; display: none;"></video>
+                            <canvas id="cameraCanvas" style="display: none;"></canvas>
+                            <img id="camera-snapshot" class="hidden"
+                                style="width: 100%; border-radius: 8px; margin-bottom: 10px;">
+
+                            <div class="camera-controls" style="margin-top: 10px;">
+                                <button id="btn-start-cam" class="btn-secondary small" onclick="startCamera()"><i
+                                        class="fas fa-power-off"></i> Start Camera</button>
+                                <button id="btn-capture" class="btn-primary small hidden" onclick="captureSnapshot()"><i
+                                        class="fas fa-circle"></i> Capture</button>
+                                <button id="btn-retake" class="btn-secondary small hidden" onclick="retakeSnapshot()"><i
+                                        class="fas fa-redo"></i> Retake</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card action-card">
+                <div class="mint-summary">
+                    <div><small>PROJECTED CREDIT</small>
+                        <h2 id="projected-rcc">0.0 RCC</h2>
+                    </div>
+                    <div><small>CONFIDENCE</small>
+                        <h2 id="ai-confidence">--%</h2>
+                    </div>
+                </div>
+
+                <button id="btn-mint" class="btn-primary large" disabled onclick="submitToBlockchain()">
+                    <i class="fas fa-cube"></i> VERIFY & MINT BATCH
+                </button>
+
+                <div id="batch-results" class="batch-results hidden">
+                    <div class="results-header">
+                        <h4><i class="fas fa-clipboard-list"></i> Verification Report</h4>
+                        <span id="batch-badge" class="badge">0 Files</span>
+                    </div>
+                    <!-- Detailed Result Cards will be injected here -->
+                    <div id="detailed-results-container" class="results-grid-vertical"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-industrialist" class="interface-section hidden">
+
+            <div class="compliance-card">
+                <div class="compliance-header">
+                    <div>
+                        <h3><i class="fas fa-smog"></i> Emission Compensation</h3>
+                        <small>Fiscal Year 2025-2026 Target</small>
+                    </div>
+                    <div id="compliance-badge" class="status-badge danger">
+                        NON-COMPLIANT
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-labels">
+                        <span>Offset Progress</span>
+                        <strong id="progress-text">0%</strong>
+                    </div>
+                    <div class="progress-track">
+                        <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="stats-row compact">
+                    <div class="stat-item">
+                        <small>TOTAL EMISSIONS</small>
+                        <strong>120.0 Tons</strong>
+                    </div>
+                    <div class="stat-item">
+                        <small>CREDITS BOUGHT</small>
+                        <strong id="indus-balance" class="highlight">0.0 RCC</strong>
+                    </div>
+                    <div class="stat-item">
+                        <small>REMAINING DEBT</small>
+                        <strong id="indus-debt" class="danger-text">120.0 Tons</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="marketplace-container">
+                <div class="section-header">
+                    <h3><i class="fas fa-shopping-cart"></i> Carbon Credit Marketplace</h3>
+                    <div class="wallet-info">
+                        <i class="fab fa-ethereum"></i> <span id="eth-balance">0.45 ETH</span>
+                    </div>
+                </div>
+                <div id="market-grid" class="market-grid"></div>
+            </div>
+        </section>
+
+    </main>
+    <div id="toast" class="toast">Action Successful</div>
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

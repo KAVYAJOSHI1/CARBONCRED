@@ -10,3 +10,5 @@ numpy
 ultralytics
 opencv-python
 web3
+sentinelhub-py
+python-dotenv

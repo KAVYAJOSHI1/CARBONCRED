@@ -112,6 +112,7 @@ function restoreFarmerUI() {
                             ${renderCheck('Location', item.checks.location)}
                             ${renderCheck('Biomass', item.checks.biomass)}
                             ${renderCheck('Duplicate', item.checks.duplicate)}
+                            ${renderCheck('Environment', item.checks.environment)}
                         </div>
                     `;
                 }

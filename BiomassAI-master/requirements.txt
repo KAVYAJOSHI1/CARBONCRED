@@ -1,0 +1,10 @@
+Django
+djangorestframework
+django-cors-headers
+Pillow
+ImageHash
+numpy
+tensorflow
+tf-keras
+sentinelhub
+pyngrok

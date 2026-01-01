@@ -8,6 +8,7 @@ from ultralytics import YOLO
 from core.services.vision import detect_tree
 from core.services.geo import validate_location
 from core.services.hash import check_duplicate
+from core.services.ndvi import fetch_sentinel_ndvi, correlate_ndvi
 
 # ==========================================
 # 1. SETUP & CONFIGURATION
@@ -104,22 +105,57 @@ def analyze_carbon_from_image(uploaded_image, claimed_lat=None, claimed_lon=None
         if is_duplicate:
             print("   DUPLICATE DETECTED: Asset already verified.")
             rejection_reasons.append("Duplicate Image")
-            
+
+        # --- CHECK 4: ENVIRONMENTAL (NDVI) ---
+        # Fetch Satellite Data if coordinates are available
+        ndvi_val = None
+        ndvi_status = "Skipped"
+        ndvi_pass = True
+        
+        if claimed_lat and claimed_lon:
+            print(f"   Fetching Sentinel-2 Data for {claimed_lat}, {claimed_lon}...")
+            ndvi_val = fetch_sentinel_ndvi(float(claimed_lat), float(claimed_lon))
+            ndvi_status, ndvi_pass = correlate_ndvi(ndvi_val, is_biomass)
+            print(f"   NDVI Analysis: {ndvi_val} -> {ndvi_status}")
+
+        checks['environment'] = {
+            "status": ndvi_pass,
+            "msg": f"NDVI {ndvi_val}: {ndvi_status}" if ndvi_val else "No Sat Data"
+        }
+        # We don't strictly reject on NDVI yet (allow "Soft Fail"), or we can strict mode it.
+        # For now, let's keep it advisory unless it's a blatant mismatch.
+        if not ndvi_pass:
+             print("   WARNING: Environmental mismatch detected.")
+             # rejection_reasons.append("Environmental Mismatch") # Uncomment for strict mode
+
         # --- FINAL DECISION ---
         if len(rejection_reasons) > 0:
             if os.path.exists(temp_path): os.remove(temp_path)
             return 0.0, 0, False, checks
 
         # --- SUCCESS: CALCULATE CREDITS ---
-        estimated_biomass = 0.5 + (confidence * 20.0) + (valid_objects * 0.5)
-        if estimated_biomass > 50.0: estimated_biomass = 50.0
+        # Formula from BiomassAI-master
+        # 1. Base Biomass = 1000kg (average tree) * confidence
+        base_mass_kg = 1000.0 * confidence
+        
+        # 2. Add extra for multiple objects (small heuristic addition)
+        if valid_objects > 1:
+            base_mass_kg += (valid_objects - 1) * 200.0 
 
-        print(f"   VERIFIED: {estimated_biomass:.4f} Carbon Tons")
+        # 3. Convert to Tonnes
+        biomass_tonnes = base_mass_kg / 1000.0
+
+        # 4. Carbon Calculation: Biomass * CarbonFraction(0.47) * MolecularRatio(44/12)
+        carbon_fraction = 0.47
+        molecular_ratio = 44 / 12
+        tco2e = biomass_tonnes * carbon_fraction * molecular_ratio
+
+        print(f"   VERIFIED: {tco2e:.4f} tCO2e (Mass: {base_mass_kg:.1f}kg)")
         
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
-        return round(estimated_biomass, 4), max(valid_objects, 1), True, checks
+        return round(tco2e, 4), max(valid_objects, 1), True, checks
 
     except Exception as e:
         print(f"CRITICAL AI ERROR: {e}")

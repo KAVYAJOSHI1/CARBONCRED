@@ -29,10 +29,33 @@ The core of the system relies on a sequential "Gatekeeper" architecture. An imag
 **Model:** YOLOv8 (You Only Look Once).
 **Mechanism:** An object detection model scans the verified biomass to count individual organic structures (trees, plants). This count contributes to the final carbon tonnage estimation.
 
+### 5. Environmental Gatekeeper (Satellite NDVI)
+**Purpose:** Cross-references the ground-level image with real-time satellite spectral data to ensure environmental consistency.
+**Mechanism:** The system queries Sentinel-2 Satellite data (via Sentinel Hub) for the claimed GPS coordinates to calculate the Normalized Difference Vegetation Index (NDVI).
+**Failure Condition:** If the satellite data shows "Barren/Urban" (low NDVI) while the user claims to be in a "Forest" (high biomass), the asset is flagged for review or rejected as a discrepancy.
+
+### 6. Carbon Credit Issuance (Scientific Formula)
+**Purpose:** Calculates the precise tCO2e (Tonnes of Carbon Dioxide Equivalent) stored in the verified biomass.
+**Mechanism:** Uses the molecular weight method rather than simple heuristics.
+**Formula:** 
+`tCO2e = (Biomass_kg / 1000) * 0.47 * (44/12)`
+*   **Biomass:** Estimated from computer vision volume (avg 1000kg/tree).
+*   **0.47:** Carbon Fraction (Scientific Baseline for dry wood).
+*   **44/12:** Ratio of CO2 molecular weight to Carbon atomic weight.
+
 ---
 
-## Installation and Local Setup
+## Configuration
+Before running the application, you must configure the environment variables.
+1.  Copy `.env.example` to `.env`.
+2.  Add your keys:
+    ```bash
+    # (Optional) Sentinel Hub API for Real Satellite Data
+    SH_CLIENT_ID=your_id_here
+    SH_CLIENT_SECRET=your_secret_here
+    ```
 
+## Installation and Local Setup
 ### Prerequisites
 1. Python 3.9 or higher
 2. PIP (Python Package Manager)

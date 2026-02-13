@@ -33,3 +33,13 @@ npm-debug.log*
 
 # Node (Frontend dev)
 node_modules/
+
+# ... (Your existing code) ...
+
+# --- NEW: Google Earth Engine Secrets ---
+carbonverse-d73f871957f0.json
+*.json  # Optional: safety net to ignore ALL json files in root (be careful)
+
+# --- NEW: Blockchain Artifacts (Hardhat) ---
+artifacts/
+cache/

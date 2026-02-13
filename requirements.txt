@@ -1,7 +1,6 @@
 Django==5.2.9
 djangorestframework
 django-cors-headers
-# Deep Learning
 tensorflow
 tf-keras
 Pillow
@@ -10,5 +9,11 @@ numpy
 ultralytics
 opencv-python
 web3
-sentinelhub-py
+sentinelhub
 python-dotenv
+earthengine-api
+google-auth
+
+transformers
+torch
+timm

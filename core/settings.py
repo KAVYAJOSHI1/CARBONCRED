@@ -1,5 +1,5 @@
 """
-Django settings for backend project.
+Django settings for the project.
 """
 
 from pathlib import Path
@@ -32,12 +32,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    'corsheaders',  # <--- ADDED: Required for Frontend connection
+    'corsheaders',  # Required for Frontend connection
     'core',
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',      # <--- ADDED: Must be at the TOP
+    'corsheaders.middleware.CorsMiddleware',      # Must be at the TOP
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -52,7 +52,8 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'frontend'],
+        # FIX 1: Point to the new 'templates' folder
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -64,7 +65,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'backend.wsgi.application'# Double check if your folder is named 'core' or 'backend'
+# Note: Ensure your project folder containing wsgi.py is actually named 'backend'. 
+# If it is named 'core', change this to 'core.wsgi.application'.
+WSGI_APPLICATION = 'backend.wsgi.application' 
 
 
 # Database
@@ -102,7 +105,9 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'frontend']
+
+# FIX 2: Point to the new 'static' folder
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -112,6 +117,5 @@ INFURA_URL = os.getenv("INFURA_URL")
 PRIVATE_KEY = os.getenv("PRIVATE_KEY")
 CONTRACT_ADDRESS = os.getenv("CONTRACT_ADDRESS")
 
-# --- CORS CONFIGURATION (ADDED) ---
-# This tells Django: "It's okay if a browser file (index.html) talks to me."
+# --- CORS CONFIGURATION ---
 CORS_ALLOW_ALL_ORIGINS = True

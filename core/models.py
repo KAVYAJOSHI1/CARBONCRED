@@ -17,6 +17,9 @@ class Upload(models.Model):
     longitude = models.FloatField()
     created_at = models.DateTimeField(auto_now_add=True)
     image_hash = models.CharField(max_length=64, blank=True, null=True)
+    
+    # New Field for Delta Logic
+    biomass_credits = models.FloatField(default=0.0)
 
     status = models.CharField(
         max_length=20,

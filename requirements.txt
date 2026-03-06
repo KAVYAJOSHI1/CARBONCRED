@@ -12,3 +12,5 @@ opencv-python
 web3
 sentinelhub-py
 python-dotenv
+earthengine-api
+google-api-python-client

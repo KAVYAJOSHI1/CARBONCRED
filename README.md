@@ -29,9 +29,10 @@ The core of the system relies on a sequential "Gatekeeper" architecture. An imag
 **Model:** YOLOv8 (You Only Look Once).
 **Mechanism:** An object detection model scans the verified biomass to count individual organic structures (trees, plants). This count contributes to the final carbon tonnage estimation.
 
-### 5. Environmental Gatekeeper (Satellite NDVI)
+### 5. Environmental Gatekeeper (Google Earth Engine)
 **Purpose:** Cross-references the ground-level image with real-time satellite spectral data to ensure environmental consistency.
-**Mechanism:** The system queries Sentinel-2 Satellite data (via Sentinel Hub) for the claimed GPS coordinates to calculate the Normalized Difference Vegetation Index (NDVI).
+**Mechanism:** The system uses **Google Earth Engine (GEE)** to analyze Sentinel-2 (Surface Reflectance) data for the claimed GPS coordinates to calculate the Normalized Difference Vegetation Index (NDVI).
+**Verification:** It fetches the least cloudy image from the last 30 days and computes the mean NDVI.
 **Failure Condition:** If the satellite data shows "Barren/Urban" (low NDVI) while the user claims to be in a "Forest" (high biomass), the asset is flagged for review or rejected as a discrepancy.
 
 ### 6. Carbon Credit Issuance (Scientific Formula)
@@ -48,12 +49,14 @@ The core of the system relies on a sequential "Gatekeeper" architecture. An imag
 ## Configuration
 Before running the application, you must configure the environment variables.
 1.  Copy `.env.example` to `.env`.
-2.  Add your keys:
-    ```bash
-    # (Optional) Sentinel Hub API for Real Satellite Data
-    SH_CLIENT_ID=your_id_here
-    SH_CLIENT_SECRET=your_secret_here
-    ```
+2.  **Google Earth Engine Setup (Required for Real Data):**
+    *   Create a Google Cloud Project and enable the **Earth Engine API**.
+    *   Create a **Service Account** and download the JSON key file.
+    *   Save the key file in the project root (e.g., `gee-key.json`).
+    *   Update `.env`:
+        ```bash
+        GEE_SERVICE_ACCOUNT_KEY_FILE=./gee-key.json
+        ```
 
 ## Installation and Local Setup
 ### Prerequisites

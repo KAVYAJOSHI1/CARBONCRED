@@ -1,117 +1,130 @@
 import os
 import datetime
-import numpy as np
+import json
 
-# Try importing sentinelhub, but provide mock fallback if not installed
+# GEE Dependencies
 try:
-    from sentinelhub import SHConfig, SentinelHubRequest, DataCollection, MimeType, BBox, CRS
-    SENTINEL_AVAILABLE = True
+    import ee
+    from google.oauth2 import service_account
+    GEE_AVAILABLE = True
 except ImportError:
-    SENTINEL_AVAILABLE = False
+    GEE_AVAILABLE = False
+    print("   [GEE] 'earthengine-api' not installed.")
+
+
+def initialize_gee():
+    """
+    Initializes Google Earth Engine.
+    Prioritizes Service Account (server-side) auth.
+    """
+    if not GEE_AVAILABLE: return False
+
+    try:
+        # Check if already initialized to avoid overhead
+        if ee.data._credentials:
+            return True
+            
+        # 1. Look for Service Account Key Path in ENV
+        key_path = os.environ.get('GEE_SERVICE_ACCOUNT_KEY_FILE')
+        
+        if key_path and os.path.exists(key_path):
+            # Server-side Auth
+            print(f"   [GEE] Authenticating with Service Account: {key_path}")
+            credentials = service_account.Credentials.from_service_account_file(key_path)
+            scoped_credentials = credentials.with_scopes(['https://www.googleapis.com/auth/earthengine'])
+            ee.Initialize(credentials=scoped_credentials)
+            return True
+        else:
+            # 2. Fallback: Try Default Auth (if user ran 'earthengine authenticate' locally)
+            # This works for local dev machines without a service account file
+            print("   [GEE] No Service Account found. Trying default credentials...")
+            try:
+                ee.Initialize()
+                return True
+            except Exception:
+                print("   [GEE] Authentication Failed. Please set GEE_SERVICE_ACCOUNT_KEY_FILE.")
+                return False
+
+    except Exception as e:
+        print(f"   [GEE] Init Error: {e}")
+        return False
 
 def fetch_sentinel_ndvi(lat, lon):
     """
-    Fetches the average NDVI for a small bounding box around the given coordinates.
-    Returns a float (NDVI value) or None.
+    Fetches real NDVI from Google Earth Engine (Sentinel-2 Surface Reflectance).
     """
-    # 1. Credentials Check
-    client_id = os.environ.get('SH_CLIENT_ID')
-    client_secret = os.environ.get('SH_CLIENT_SECRET')
-
-    if not SENTINEL_AVAILABLE or not client_id or not client_secret:
-        print("   [NDVI] Sentinel Hub not configured or library missing. Using Mock Data.")
-        # Return a realistic random value for demo purposes (0.4 - 0.8 is healthy vegetation)
-        import random
-        return round(random.uniform(0.45, 0.75), 2)
+    if not initialize_gee():
+        print("   [NDVI] GEE Not Initialized. Returning None.")
+        return None
 
     try:
-        config = SHConfig()
-        config.sh_client_id = client_id
-        config.sh_client_secret = client_secret
+        # 1. Define Point of Interest
+        point = ee.Geometry.Point([lon, lat])
         
-        # 2. Define Area (~100m box)
-        delta = 0.0005
-        bbox = BBox(bbox=[lon - delta, lat - delta, lon + delta, lat + delta], crs=CRS.WGS84)
-
-        # 3. NDVI Eval Script
-        evalscript = """
-        //VERSION=3
-        function setup() {
-          return {
-            input: ["B04", "B08", "dataMask"],
-            output: { bands: 2, sampleType: "FLOAT32" }
-          }
-        }
-        function evaluatePixel(sample) {
-          let ndvi = (sample.B08 - sample.B04) / (sample.B08 + sample.B04);
-          return [ndvi, sample.dataMask];
-        }
-        """
-
-        # 4. Request
-        today = datetime.date.today()
-        start_date = today - datetime.timedelta(days=30)
+        # 2. Define Date Range (Last 30 days)
+        end_date = datetime.date.today()
+        start_date = end_date - datetime.timedelta(days=30)
         
-        request = SentinelHubRequest(
-            evalscript=evalscript,
-            input_data=[
-                SentinelHubRequest.input_data(
-                    data_collection=DataCollection.SENTINEL2_L2A,
-                    time_interval=(start_date.isoformat(), today.isoformat()),
-                    maxcc=20.0,
-                    mosaicking_order="leastCC"
-                )
-            ],
-            responses=[
-                SentinelHubRequest.output_response('default', MimeType.TIFF)
-            ],
-            bbox=bbox,
-            size=[10, 10], 
-            config=config
-        )
+        # 3. Load Sentinel-2 Harmonic (Surface Reflectance)
+        # Using 'COPERNICUS/S2_SR_HARMONIZED' for best ready-to-use data
+        s2 = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED') \
+            .filterBounds(point) \
+            .filterDate(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d')) \
+            .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20)) \
+            .sort('CLOUDY_PIXEL_PERCENTAGE')
 
-        # 5. Execute
-        data = request.get_data()
-        if not data or len(data) == 0:
-            return None
-        
-        image_data = data[0]
-        ndvi_band = image_data[:, :, 0]
-        mask_band = image_data[:, :, 1]
-
-        valid_ndvi = ndvi_band[mask_band == 1]
-
-        if valid_ndvi.size == 0:
+        # 4. Check if we have images
+        count = s2.size().getInfo()
+        if count == 0:
+            print("   [NDVI] No clear satellite images found in last 30 days.")
             return None
 
-        return float(np.mean(valid_ndvi))
+        # 5. Get Best Image (Least Cloudy)
+        image = s2.first()
+        
+        # 6. Compute NDVI
+        # NDVI = (NIR - Red) / (NIR + Red) -> (B8 - B4) / (B8 + B4)
+        ndvi = image.normalizedDifference(['B8', 'B4']).rename('NDVI')
+        
+        # 7. Reduce Region (Get value at the specific point)
+        # Scale 10m is Sentinel-2 resolution
+        result = ndvi.reduceRegion(
+            reducer=ee.Reducer.mean(),
+            geometry=point,
+            scale=10,
+            maxPixels=1e9
+        ).getInfo()
+
+        ndvi_value = result.get('NDVI')
+        
+        if ndvi_value is not None:
+             return float(ndvi_value)
+        return None
 
     except Exception as e:
-        print(f"   [NDVI] Error fetching data: {e}")
+        print(f"   [GEE] Calculation Error: {e}")
         return None
 
 def correlate_ndvi(ndvi, is_biomass):
     """
-    Analyzes consistency between satellite NDVI and ground-level AI.
-    Returns: (Status String, Passed Boolean)
+    Interprets the NDVI value.
     """
     if ndvi is None:
-        return "N/A (No Sat Data)", True # Pass by default if no data to avoid blocking
+        return "N/A (GEE Error or No Data)", True 
 
-    # Interpreting NDVI
-    # < 0.2: Soil/Water
+    # Real GEE NDVI Interpretation
+    # > 0.4: Healthy Vegetation
     # 0.2 - 0.4: Sparse Vegetation
-    # > 0.4: Dense Vegetation
+    # < 0.2: Soil/Urban/Water
 
     if is_biomass:
-        if ndvi > 0.3:
+        if ndvi > 0.35:
             return "Consistent (Healthy Vegetation)", True
         elif ndvi < 0.2:
-            return "Warning: Low Satellite Greenery", False # Suspicious
+            return "Warning: Low Satellite Greenery", False
         else:
             return "Plausible", True
     else:
-        # AI says NO biomass, but Satellite says YES?
         if ndvi > 0.5:
             return "Discrepancy: High Sat. Vegetation", False
         else:

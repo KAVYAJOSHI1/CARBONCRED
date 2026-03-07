@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarbonVerse — AI-Powered Carbon Credit Verification</title>
+    <meta name="description"
+        content="CarbonVerse uses frontier AI to verify carbon offsets from real farmland. Stop greenwashing. Start real environmental impact.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/landing.css">
+</head>
+
+<body>
+
+    <!-- ═══ CURSOR FOLLOWER ═══ -->
+    <div class="cursor-glow" id="cursorGlow"></div>
+
+    <!-- ═══ NAVBAR ═══ -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <div class="brand-icon">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <span class="brand-name">CARBONVERSE</span>
+            </a>
+
+            <div class="nav-links" id="navLinks">
+                <a href="#problem" class="nav-link">The Crisis</a>
+                <a href="#solution" class="nav-link">Our Solution</a>
+                <a href="#roles" class="nav-link">Who It's For</a>
+                <a href="#tech" class="nav-link">Technology</a>
+                <a href="#stats" class="nav-link">Impact</a>
+            </div>
+
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <i class="fas fa-sun" id="themeIcon"></i>
+                </button>
+                <a href="/app" class="btn-launch">
+                    <span>Launch App</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══ HERO SECTION ═══ -->
+    <section class="hero" id="hero">
+        <div class="hero-canvas">
+            <canvas id="particleCanvas"></canvas>
+        </div>
+        <div class="hero-bg-image" style="background-image: url('/static/hero_forest.png')"></div>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+            <div class="hero-badge reveal-up">
+                <span class="badge-dot"></span>
+                <span>Powered by AI · Secured by Blockchain</span>
+            </div>
+
+            <h1 class="hero-title reveal-up" data-delay="100">
+                <span class="line">The Earth is</span>
+                <span class="line gradient-text">Running Out of Time.</span>
+                <span class="line">We're Buying It Back.</span>
+            </h1>
+
+            <p class="hero-subtitle reveal-up" data-delay="200">
+                CarbonVerse uses frontier AI to create a fraud-proof carbon credit registry. Every credit is verified
+                against real satellite data, deep fake detection, and on-chain transparency.
+            </p>
+
+            <div class="hero-cta reveal-up" data-delay="300">
+                <a href="/app" class="btn-primary-hero">
+                    <i class="fas fa-rocket"></i>
+                    Enter the Platform
+                </a>
+                <a href="#problem" class="btn-ghost-hero">
+                    <i class="fas fa-play-circle"></i>
+                    See Why It Matters
+                </a>
+            </div>
+
+            <div class="hero-stats reveal-up" data-delay="400">
+                <div class="hstat">
+                    <strong class="counter" data-target="3402">0</strong>
+                    <span>Active Seller Nodes</span>
+                </div>
+                <div class="hstat-divider"></div>
+                <div class="hstat">
+                    <strong class="counter" data-target="94">0</strong>
+                    <span>% Network Compliance</span>
+                </div>
+                <div class="hstat-divider"></div>
+                <div class="hstat">
+                    <strong class="counter" data-target="47291">0</strong>
+                    <span>Tons CO₂ Verified</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="scroll-indicator">
+            <div class="scroll-mouse">
+                <div class="scroll-wheel"></div>
+            </div>
+            <span>Scroll to explore</span>
+        </div>
+    </section>
+
+    <!-- ═══ PROBLEM SECTION ═══ -->
+    <section class="problem-section" id="problem">
+        <div class="section-container">
+            <div class="split-layout">
+                <div class="split-image reveal-left">
+                    <img src="/static/crisis_photo.png" alt="Environmental Crisis" class="photo-card">
+                    <div class="photo-badge-pill">
+                        <i class="fas fa-temperature-high"></i>
+                        <span>+1.5°C above pre-industrial levels</span>
+                    </div>
+                </div>
+                <div class="split-content reveal-right">
+                    <div class="section-tag">THE CRISIS</div>
+                    <h2 class="section-title">Greenwashing is killing the planet — and your trust.</h2>
+                    <p class="section-body">
+                        Companies spend billions on "carbon neutral" labels. But over <strong>85% of current carbon
+                            offset credits</strong> have been found to be worthless — verified by satellite analysis.
+                        Trees that don't exist. Forests that were never planted.
+                    </p>
+                    <p class="section-body">
+                        The system is broken. Corporations check a compliance box. The climate gets nothing real in
+                        return.
+                    </p>
+                    <div class="problem-stats">
+                        <div class="pstat-item">
+                            <strong>$2.4B</strong>
+                            <span>wasted annually on fraudulent carbon offsets</span>
+                        </div>
+                        <div class="pstat-item">
+                            <strong>85%</strong>
+                            <span>of REDD+ credits found to be ineffective (Guardian, 2023)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ SOLUTION SECTION ═══ -->
+    <section class="solution-section" id="solution">
+        <div class="section-container">
+            <div class="section-header-center reveal-up">
+                <div class="section-tag">OUR SOLUTION</div>
+                <h2 class="section-title">Truth, encoded on a blockchain. Verified by AI.</h2>
+                <p class="section-subtitle">CarbonVerse builds an unbreakable chain of evidence for every carbon credit
+                    — from the farmer's phone to a corporate ESG report.</p>
+            </div>
+
+            <div class="solution-flow reveal-up" data-delay="100">
+                <div class="flow-step">
+                    <div class="flow-icon forest">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <h4>Farmer Uploads</h4>
+                    <p>Geo-tagged photos from real farmland, captured on a smartphone</p>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+                <div class="flow-step">
+                    <div class="flow-icon ai">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h4>5-Layer AI Gate</h4>
+                    <p>Satellite NDVI check, deep fake detection, CLIP object classification</p>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+                <div class="flow-step">
+                    <div class="flow-icon chain">
+                        <i class="fas fa-link"></i>
+                    </div>
+                    <h4>On-Chain Mint</h4>
+                    <p>Verified credits are minted as RCC tokens on Sepolia blockchain</p>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+                <div class="flow-step">
+                    <div class="flow-icon corp">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h4>Corporate Purchase</h4>
+                    <p>Businesses acquire real, auditable credits for true Net Zero compliance</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ ROLES SECTION ═══ -->
+    <section class="roles-section" id="roles">
+        <div class="section-container">
+            <div class="section-header-center reveal-up">
+                <div class="section-tag">THE ECOSYSTEM</div>
+                <h2 class="section-title">Three roles. One transparent network.</h2>
+            </div>
+
+            <div class="roles-grid">
+
+                <div class="role-card seller-card reveal-up" data-delay="0">
+                    <div class="role-imagery">
+                        <img src="/static/hero_forest.png" alt="Farmer in the field" class="role-img">
+                        <div class="role-img-overlay"></div>
+                    </div>
+                    <div class="role-content">
+                        <div class="role-icon-badge farmer-badge">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <div class="role-tag">OFFSET GENERATOR</div>
+                        <h3>The Farmer</h3>
+                        <p>Walk into your field. Point your phone at the trees. Our AI does the rest — calculating how
+                            much carbon your biomass is absorbing, in real-time.</p>
+                        <ul class="role-perks">
+                            <li><i class="fas fa-check"></i> GPS geo-tag verification</li>
+                            <li><i class="fas fa-check"></i> AI biomass calculation</li>
+                            <li><i class="fas fa-check"></i> Instant credit minting</li>
+                            <li><i class="fas fa-check"></i> Works on mobile cameras</li>
+                        </ul>
+                        <a href="/app" class="role-cta">Start Generating <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+
+                <div class="role-card buyer-card reveal-up" data-delay="150">
+                    <div class="role-imagery">
+                        <img src="/static/corporate_photo.png" alt="Corporate buyer" class="role-img">
+                        <div class="role-img-overlay"></div>
+                    </div>
+                    <div class="role-content">
+                        <div class="role-icon-badge buyer-badge">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="role-tag">CORPORATE COMPLIANCE</div>
+                        <h3>The Business</h3>
+                        <p>Your factory runs. Your team flies. Your data centers run 24/7. CarbonVerse gives you a
+                            verified path to genuine Net Zero — not a greenwashing band-aid.</p>
+                        <ul class="role-perks">
+                            <li><i class="fas fa-check"></i> AI-verified credit marketplace</li>
+                            <li><i class="fas fa-check"></i> Real-time compliance dashboard</li>
+                            <li><i class="fas fa-check"></i> Blockchain audit trail</li>
+                            <li><i class="fas fa-check"></i> ESG reporting ready</li>
+                        </ul>
+                        <a href="/app" class="role-cta">Browse Credits <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+
+                <div class="role-card admin-card reveal-up" data-delay="300">
+                    <div class="role-content full-content">
+                        <div class="role-icon-badge admin-badge">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="role-tag">NETWORK OVERSEER</div>
+                        <h3>The Administrator</h3>
+                        <p>With a God's-eye view of the entire network — monitor active seller nodes, track total
+                            verified tonnage, and ensure zero fraudulent activity across 3,400+ farmer nodes.</p>
+                        <div class="admin-stats-mini">
+                            <div class="asm-item">
+                                <strong>3,402</strong>
+                                <span>Active Nodes</span>
+                            </div>
+                            <div class="asm-item">
+                                <strong>94.2%</strong>
+                                <span>Compliance Rate</span>
+                            </div>
+                            <div class="asm-item">
+                                <strong>12</strong>
+                                <span>Pending Audits</span>
+                            </div>
+                        </div>
+                        <a href="/app" class="role-cta">Open Console <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ TECHNOLOGY SECTION ═══ -->
+    <section class="tech-section" id="tech">
+        <div class="section-container">
+            <div class="section-header-center reveal-up">
+                <div class="section-tag">THE AI GATEKEEPERS</div>
+                <h2 class="section-title">5 layers of defense against greenwashing fraud.</h2>
+                <p class="section-subtitle">Every image passes through our multi-model AI pipeline before a single
+                    credit is issued.</p>
+            </div>
+
+            <div class="tech-grid">
+                <div class="tech-card reveal-up" data-delay="0">
+                    <div class="tech-number">01</div>
+                    <div class="tech-icon"><i class="fas fa-satellite"></i></div>
+                    <h4>Location Verification</h4>
+                    <p>GPS metadata is extracted and cross-referenced with Google Earth Engine satellite NDVI data to
+                        confirm you're actually at a real farming location.</p>
+                    <div class="tech-tag-list">
+                        <span>GEE API</span><span>EXIF GPS</span><span>NDVI</span>
+                    </div>
+                </div>
+                <div class="tech-card reveal-up" data-delay="100">
+                    <div class="tech-number">02</div>
+                    <div class="tech-icon"><i class="fas fa-cube"></i></div>
+                    <h4>Deep Fake Detection</h4>
+                    <p>Intel DPT-Hybrid-Midas generates a 3D depth map. Real forests have high depth variance. A photo
+                        of a computer screen has zero variance — instantly rejected.</p>
+                    <div class="tech-tag-list">
+                        <span>DPT-Midas</span><span>Depth Estimation</span>
+                    </div>
+                </div>
+                <div class="tech-card reveal-up" data-delay="200">
+                    <div class="tech-number">03</div>
+                    <div class="tech-icon"><i class="fas fa-eye"></i></div>
+                    <h4>Biomass Classification</h4>
+                    <p>OpenAI CLIP-ViT verifies that the image actually contains valid biomass — and can even identify
+                        Indian species like Neem, Teak, and Sandalwood.</p>
+                    <div class="tech-tag-list">
+                        <span>CLIP-ViT</span><span>Zero-Shot Learning</span>
+                    </div>
+                </div>
+                <div class="tech-card reveal-up" data-delay="300">
+                    <div class="tech-number">04</div>
+                    <div class="tech-icon"><i class="fas fa-draw-polygon"></i></div>
+                    <h4>Volume Counting</h4>
+                    <p>Google OWL-ViT draws bounding boxes around individual trees. Combined with HSV green-pixel
+                        density analysis, it calculates precise Carbon Tonnage.</p>
+                    <div class="tech-tag-list">
+                        <span>OWL-ViT</span><span>HSV Analysis</span><span>Chave Formula</span>
+                    </div>
+                </div>
+                <div class="tech-card reveal-up" data-delay="400">
+                    <div class="tech-number">05</div>
+                    <div class="tech-icon"><i class="fas fa-fingerprint"></i></div>
+                    <h4>Anti-Fraud Hashing</h4>
+                    <p>Every uploaded image gets a unique perceptual fingerprint. Resubmitting the same photo — even
+                        with minor edits — is detected and blocked on the ledger.</p>
+                    <div class="tech-tag-list">
+                        <span>pHash</span><span>MD5</span><span>Blockchain Lock</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ IMPACT STATS ═══ -->
+    <section class="stats-section" id="stats">
+        <div class="stats-bg-layer"></div>
+        <div class="section-container">
+            <div class="section-header-center reveal-up">
+                <div class="section-tag">REAL IMPACT</div>
+                <h2 class="section-title">Numbers that matter.</h2>
+            </div>
+            <div class="mega-stats reveal-up" data-delay="100">
+                <div class="mega-stat">
+                    <div class="mega-number">
+                        <span class="counter-mega" data-target="47291">0</span>
+                    </div>
+                    <div class="mega-label">Tons of CO₂ Permanently Verified</div>
+                    <div class="mega-sub">Equivalent to removing 10,200 cars from roads</div>
+                </div>
+                <div class="mega-stat">
+                    <div class="mega-number">
+                        <span class="counter-mega" data-target="3402">0</span>
+                    </div>
+                    <div class="mega-label">Active Farmer Seller Nodes</div>
+                    <div class="mega-sub">Across 18 Indian states and growing</div>
+                </div>
+                <div class="mega-stat">
+                    <div class="mega-number">
+                        <span class="counter-mega" data-target="99">0</span><span class="mega-suffix">%</span>
+                    </div>
+                    <div class="mega-label">Fraud Detection Accuracy</div>
+                    <div class="mega-sub">Zero double-spend attacks since launch</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ CTA SECTION ═══ -->
+    <section class="cta-section">
+        <div class="cta-bg"><canvas id="ctaCanvas"></canvas></div>
+        <div class="section-container">
+            <div class="cta-content reveal-up">
+                <h2 class="cta-title">The planet needs real action. Not paperwork.</h2>
+                <p class="cta-body">Whether you're a farmer monetizing your land's natural value, or a corporation on a
+                    genuine Net Zero journey — CarbonVerse is your platform.</p>
+                <div class="cta-buttons">
+                    <a href="/app" class="btn-primary-hero big">
+                        <i class="fas fa-leaf"></i>
+                        Enter CarbonVerse
+                    </a>
+                    <a href="#" class="btn-ghost-hero">
+                        <i class="fab fa-github"></i>
+                        View on GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ FOOTER ═══ -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <div class="nav-brand">
+                    <div class="brand-icon small"><i class="fas fa-leaf"></i></div>
+                    <span class="brand-name">CARBONVERSE</span>
+                </div>
+                <p>Enterprise carbon credit verification powered by frontier AI and blockchain technology.</p>
+                <div class="footer-chain-badge">
+                    <span class="badge-dot"></span> Sepolia Testnet Live
+                </div>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h5>Platform</h5>
+                    <a href="/app">Dashboard</a>
+                    <a href="/app">Marketplace</a>
+                    <a href="/app">Verification</a>
+                </div>
+                <div class="footer-col">
+                    <h5>Technology</h5>
+                    <a href="#tech">AI Engine</a>
+                    <a href="#tech">Blockchain Layer</a>
+                    <a href="#tech">Satellite Data</a>
+                </div>
+                <div class="footer-col">
+                    <h5>Project</h5>
+                    <a href="#">GitHub</a>
+                    <a href="#">Documentation</a>
+                    <a href="#">API Reference</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2026 CarbonVerse. Built for a better planet.</span>
+            <span>Made with <i class="fas fa-heart" style="color:#10b981"></i> for Earth</span>
+        </div>
+    </footer>
+
+    <script src="/static/landing.js"></script>
+</body>
+
+</html>

@@ -1,20 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CarbonVerse | Enterprise Carbon Registry</title>
-    <link rel="stylesheet" href="/static/style.css?v=2.0">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <meta name="description" content="CarbonVerse enterprise carbon credit verification platform.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=3.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // Apply saved theme before paint to prevent flash
+        (function () {
+            const t = localStorage.getItem('cv_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
 </head>
 
 <body>
 
     <aside class="sidebar">
         <div class="brand-section">
-            <div class="logo-icon"><i class="fas fa-leaf"></i></div>
+            <a href="/" class="logo-icon" title="Back to Home"><i class="fas fa-leaf"></i></a>
             <div class="logo-text">
                 <h2>CARBONVERSE</h2>
                 <small>Enterprise Registry</small>
@@ -27,7 +38,7 @@
                 <i class="fas fa-shield-alt"></i> <span>Admin Console</span>
             </button>
             <button class="nav-btn" onclick="switchInterface('seller')" id="nav-seller">
-                <i class="fas fa-leaf"></i> <span>Seller Node</span>
+                <i class="fas fa-seedling"></i> <span>Seller Node</span>
             </button>
             <button class="nav-btn" onclick="switchInterface('buyer')" id="nav-buyer">
                 <i class="fas fa-building"></i> <span>Corporate Buyer</span>
@@ -40,8 +51,14 @@
             </div>
         </nav>
 
+        <!-- Theme Toggle -->
+        <div class="sidebar-theme-toggle" id="appThemeToggle" title="Toggle dark/light mode">
+            <span id="appThemeLabel">Dark Mode</span>
+            <div class="toggle-switch"></div>
+        </div>
+
         <div class="user-profile">
-            <img src="https://ui-avatars.com/api/?name=Kavya+Joshi&background=10b981&color=fff" alt="User">
+            <img src="https://ui-avatars.com/api/?name=Kavya+Joshi&background=00FF87&color=000" alt="User">
             <div>
                 <strong id="current-user-name">Kavya Joshi</strong>
                 <small id="current-user-role">Farmer</small>
@@ -60,9 +77,11 @@
             </div>
         </header>
 
+        <!-- ADMIN VIEW -->
         <section id="view-admin" class="interface-section">
-            <div class="card form-card" style="margin-bottom: 25px;">
-                <div class="card-header"><i class="fas fa-server"></i>
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-header">
+                    <i class="fas fa-server"></i>
                     <h3>Network Overview</h3>
                 </div>
                 <div class="stats-row compact">
@@ -82,7 +101,8 @@
             </div>
 
             <div class="card action-card">
-                <div class="card-header"><i class="fas fa-clipboard-list"></i>
+                <div class="card-header">
+                    <i class="fas fa-clipboard-list"></i>
                     <h3>System Logs</h3>
                 </div>
                 <div class="batch-results" style="margin-top:0;">
@@ -92,10 +112,12 @@
             </div>
         </section>
 
+        <!-- SELLER VIEW -->
         <section id="view-seller" class="interface-section hidden">
             <div class="grid-layout">
                 <div class="card form-card">
-                    <div class="card-header"><i class="fas fa-id-card"></i>
+                    <div class="card-header">
+                        <i class="fas fa-id-card"></i>
                         <h3>Seller Details</h3>
                     </div>
                     <form onsubmit="return false;">
@@ -107,6 +129,8 @@
                             <label>Crop Type</label>
                             <select>
                                 <option>Agro-Forestry (Mangrove)</option>
+                                <option>Bamboo Plantation</option>
+                                <option>Mixed Forest</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -119,52 +143,25 @@
                 <div class="card sensor-card">
                     <div class="card-header"
                         style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
+                        <div style="display:flex; align-items:center; gap:10px;">
                             <i class="fas fa-satellite"></i>
-                            <h3 style="display: inline-block; margin-left: 5px;">Digital Verification</h3>
+                            <h3>Digital Verification</h3>
                         </div>
                         <div class="toggle-container" style="display: flex; align-items: center; gap: 8px;">
-                            <label class="switch"
-                                style="position: relative; display: inline-block; width: 40px; height: 20px;">
-                                <input type="checkbox" id="hackathon-toggle" checked
-                                    style="opacity: 0; width: 0; height: 0;">
-                                <span class="slider round"
-                                    style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #374151; transition: .4s; border-radius: 20px;"></span>
-                                <style>
-                                    .slider:before {
-                                        position: absolute;
-                                        content: "";
-                                        height: 16px;
-                                        width: 16px;
-                                        left: 2px;
-                                        bottom: 2px;
-                                        background-color: white;
-                                        transition: .4s;
-                                        border-radius: 50%;
-                                    }
-
-                                    input:checked+.slider {
-                                        background-color: #10b981;
-                                    }
-
-                                    input:focus+.slider {
-                                        box-shadow: 0 0 1px #10b981;
-                                    }
-
-                                    input:checked+.slider:before {
-                                        transform: translateX(20px);
-                                    }
-                                </style>
+                            <label class="switch">
+                                <input type="checkbox" id="hackathon-toggle" checked>
+                                <span class="slider round"></span>
                             </label>
-                            <small style="color: #9ca3af; font-size: 11px;">Dev Mode</small>
+                            <small style="color: var(--text-muted); font-size: 11px;">Dev Mode</small>
                         </div>
                     </div>
 
                     <div class="sensor-module">
                         <label>Step 1: Geo-Tagging (Batch Lock)</label>
                         <div class="gps-box">
-                            <button class="btn-secondary" onclick="captureGPS()"><i
-                                    class="fas fa-location-crosshairs"></i> Capture Coordinates</button>
+                            <button class="btn-secondary" onclick="captureGPS()">
+                                <i class="fas fa-location-crosshairs"></i> Capture Coordinates
+                            </button>
                             <div id="gps-result" class="hidden">
                                 <div class="gps-data">
                                     <span>LAT: <strong id="val-lat">--</strong></span>
@@ -178,15 +175,15 @@
                     <div class="sensor-module">
                         <label>Step 2: Biomass Evidence</label>
 
-                        <!-- Mode Toggle -->
-                        <div class="upload-options" style="margin-bottom: 10px; display: flex; gap: 10px;">
-                            <button id="btn-mode-file" class="btn-secondary active" onclick="setUploadMode('file')"><i
-                                    class="fas fa-file-upload"></i> Upload File</button>
-                            <button id="btn-mode-camera" class="btn-secondary" onclick="setUploadMode('camera')"><i
-                                    class="fas fa-camera"></i> Use Camera</button>
+                        <div class="upload-options" style="margin-bottom: 12px; display: flex; gap: 6px;">
+                            <button id="btn-mode-file" class="btn-secondary active" onclick="setUploadMode('file')">
+                                <i class="fas fa-file-upload"></i> Upload File
+                            </button>
+                            <button id="btn-mode-camera" class="btn-secondary" onclick="setUploadMode('camera')">
+                                <i class="fas fa-camera"></i> Use Camera
+                            </button>
                         </div>
 
-                        <!-- File Upload Section -->
                         <div id="section-file" class="upload-area"
                             onclick="document.getElementById('file-upload').click()">
                             <input type="file" id="file-upload" hidden multiple accept="image/*"
@@ -199,22 +196,23 @@
                             <img id="img-preview" class="hidden" alt="Field Preview">
                         </div>
 
-                        <!-- Camera Capture Section -->
-                        <div id="section-camera" class="camera-box hidden"
-                            style="text-align: center; border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; background: rgba(0,0,0,0.2);">
+                        <div id="section-camera" class="camera-box hidden" style="text-align: center; padding: 10px;">
                             <video id="cameraPreview" autoplay playsinline
-                                style="width: 100%; border-radius: 8px; display: none;"></video>
+                                style="width: 100%; border-radius: 10px; display: none;"></video>
                             <canvas id="cameraCanvas" style="display: none;"></canvas>
                             <img id="camera-snapshot" class="hidden"
-                                style="width: 100%; border-radius: 8px; margin-bottom: 10px;">
-
-                            <div class="camera-controls" style="margin-top: 10px;">
-                                <button id="btn-start-cam" class="btn-secondary small" onclick="startCamera()"><i
-                                        class="fas fa-power-off"></i> Start Camera</button>
-                                <button id="btn-capture" class="btn-primary small hidden" onclick="captureSnapshot()"><i
-                                        class="fas fa-circle"></i> Capture</button>
-                                <button id="btn-retake" class="btn-secondary small hidden" onclick="retakeSnapshot()"><i
-                                        class="fas fa-redo"></i> Retake</button>
+                                style="width: 100%; border-radius: 10px; margin-bottom: 10px;">
+                            <div class="camera-controls"
+                                style="margin-top: 10px; display:flex; gap:8px; justify-content:center;">
+                                <button id="btn-start-cam" class="btn-secondary small" onclick="startCamera()">
+                                    <i class="fas fa-power-off"></i> Start Camera
+                                </button>
+                                <button id="btn-capture" class="btn-primary small hidden" onclick="captureSnapshot()">
+                                    <i class="fas fa-circle"></i> Capture
+                                </button>
+                                <button id="btn-retake" class="btn-secondary small hidden" onclick="retakeSnapshot()">
+                                    <i class="fas fa-redo"></i> Retake
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -223,31 +221,31 @@
 
             <div class="card action-card">
                 <div class="mint-summary">
-                    <div><small>PROJECTED CREDIT</small>
+                    <div>
+                        <small>PROJECTED CREDIT</small>
                         <h2 id="projected-rcc">0.0 RCC</h2>
                     </div>
-                    <div><small>CONFIDENCE</small>
+                    <div>
+                        <small>CONFIDENCE</small>
                         <h2 id="ai-confidence">--%</h2>
                     </div>
                 </div>
-
                 <button id="btn-mint" class="btn-primary large" disabled onclick="submitToBlockchain()">
-                    <i class="fas fa-cube"></i> VERIFY & MINT BATCH
+                    <i class="fas fa-cube"></i> VERIFY &amp; MINT BATCH
                 </button>
             </div>
 
-            <div id="batch-results" class="batch-results hidden" style="margin-top: 25px;">
+            <div id="batch-results" class="batch-results hidden" style="margin-top: 24px;">
                 <div class="results-header">
                     <h4><i class="fas fa-clipboard-list"></i> Verification Report</h4>
                     <span id="batch-badge" class="badge">0 Files</span>
                 </div>
-                <!-- Detailed Result Cards will be injected here -->
                 <div id="detailed-results-container" class="results-grid-vertical"></div>
             </div>
         </section>
 
+        <!-- BUYER VIEW -->
         <section id="view-buyer" class="interface-section hidden">
-
             <div class="compliance-card">
                 <div class="compliance-header">
                     <div>
@@ -295,10 +293,30 @@
                 <div id="market-grid" class="market-grid"></div>
             </div>
         </section>
-
     </main>
+
     <div id="toast" class="toast">Action Successful</div>
-    <script src="/static/app.js?v=2.0"></script>
+    <script src="/static/app.js?v=3.0"></script>
+    <script>
+        // App theme toggle (sidebar)
+        const appThemeToggle = document.getElementById('appThemeToggle');
+        const appThemeLabel = document.getElementById('appThemeLabel');
+
+        function applyAppTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('cv_theme', theme);
+            appThemeLabel.textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
+        }
+
+        // Apply saved theme
+        const savedTheme = localStorage.getItem('cv_theme') || 'dark';
+        applyAppTheme(savedTheme);
+
+        appThemeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            applyAppTheme(current === 'dark' ? 'light' : 'dark');
+        });
+    </script>
 </body>
 
 </html>

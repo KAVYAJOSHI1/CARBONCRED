@@ -5,14 +5,21 @@ import numpy as np
 from PIL import Image
 from PIL.ExifTags import TAGS
 import torch
-from transformers import ViTImageProcessor, ViTForImageClassification
-from transformers import DPTImageProcessor, DPTForDepthEstimation
+from transformers import DPTImageProcessor, DPTForDepthEstimation, pipeline
 
 # Global model instances
-_VIT_MODEL = None
-_VIT_PROCESSOR = None
+_CLIP_PIPELINE = None
+_OWL_PIPELINE = None
 _DEPTH_MODEL = None
 _DEPTH_PROCESSOR = None
+
+# Indian Tree Species for Zero-Shot Classification
+INDIAN_TREE_SPECIES = [
+    "Neem tree", "Teak tree", "Gulmohar tree", "Mango tree", 
+    "Banyan tree", "Peepal tree", "Tamarind tree", "Coconut palm",
+    "Bamboo", "Eucalyptus tree", "Jackfruit tree", "Ashoka tree",
+    "Babul tree", "Sandalwood tree", "Sal tree"
+]
 
 # EXPANDED Whitelist
 BIOMASS_KEYWORDS = [
@@ -23,17 +30,28 @@ BIOMASS_KEYWORDS = [
     'stone_wall', 'ruin', 'coast', 'seashore', 'sandbar'
 ]
 
-def get_vit_model():
-    global _VIT_MODEL, _VIT_PROCESSOR
-    if _VIT_MODEL is None:
-        print("Loading ViT model...")
+def get_clip_pipeline():
+    global _CLIP_PIPELINE
+    if _CLIP_PIPELINE is None:
+        print("Loading CLIP zero-shot classification model...")
         try:
-            _VIT_PROCESSOR = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224')
-            _VIT_MODEL = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224')
+            # Explicitly force downloading if it isn't cached (though pipeline handles it usually)
+            _CLIP_PIPELINE = pipeline("zero-shot-image-classification", model="openai/clip-vit-base-patch32")
         except Exception as e:
-            print(f"Error loading ViT: {e}")
-            return None, None
-    return _VIT_MODEL, _VIT_PROCESSOR
+            print(f"Error loading CLIP: {e}")
+            return None
+    return _CLIP_PIPELINE
+
+def get_owl_pipeline():
+    global _OWL_PIPELINE
+    if _OWL_PIPELINE is None:
+        print("Loading OWL-ViT zero-shot object detection model...")
+        try:
+            _OWL_PIPELINE = pipeline("zero-shot-object-detection", model="google/owlvit-base-patch32")
+        except Exception as e:
+            print(f"Error loading OWL-ViT: {e}")
+            return None
+    return _OWL_PIPELINE
 
 def get_depth_model():
     global _DEPTH_MODEL, _DEPTH_PROCESSOR
@@ -177,41 +195,58 @@ def detect_tree(image_file):
     else:
         checks['depth_analysis'] = {"status": True, "msg": "Skipped (Stream)"}
 
-    # 3. VISUAL RECOGNITION (ViT)
+    # 3. VISUAL RECOGNITION (Zero-Shot CLIP + OWL-ViT)
     try:
-        model, processor = get_vit_model()
-        
         if isinstance(image_file, str):
             img = Image.open(image_file).convert('RGB')
         else:
             if hasattr(image_file, 'seek'): image_file.seek(0)
             img = Image.open(image_file).convert('RGB')
-            
-        inputs = processor(images=img, return_tensors="pt")
-        outputs = model(**inputs)
-        logits = outputs.logits
-        
-        # identifying top 5 classes
-        probs = torch.nn.functional.softmax(logits, dim=-1)
-        top5_prob, top5_indices = torch.topk(probs, 5)
-        
-        found_labels = []
-        total_nature_score = 0.0
-        
-        for i in range(5):
-            label = model.config.id2label[top5_indices[0][i].item()].lower()
-            score = top5_prob[0][i].item()
-            
-            found_labels.append(label)
-            
-            if any(k in label for k in BIOMASS_KEYWORDS):
-                total_nature_score += score
 
-        is_biomass = total_nature_score > 0.1 # ViT is more confident/specific
-        display_conf = min(total_nature_score * 2.0, 0.99)
+        # A. Detect Species (CLIP)
+        clip_pipe = get_clip_pipeline()
+        found_labels = []
+        is_biomass = False
+        display_conf = 0.0
+
+        if clip_pipe:
+            # We add generic "not a tree" or "man made object" as a negative control
+            labels_to_check = INDIAN_TREE_SPECIES + ["bushes", "grass", "indoor furniture", "man-made object", "car", "building"]
+            results = clip_pipe(img, candidate_labels=labels_to_check)
+            
+            top_result = results[0]
+            top_label = top_result['label'].lower()
+            top_score = top_result['score']
+
+            # If it picked a nature/tree class with good confidence
+            if top_label not in ["indoor furniture", "man-made object", "car", "building"]:
+                is_biomass = True
+                found_labels.append(top_label) # e.g. "neem tree"
+                display_conf = top_score
+            else:
+                 is_biomass = False
+                 found_labels.append("non-biomass")
+                 display_conf = top_score
+
+        # B. Count Trees (OWL-ViT)
+        count = 1
+        owl_pipe = get_owl_pipeline()
+        if owl_pipe and is_biomass:
+             # Query to find trees in the image. Threshold determines strictness.
+             predictions = owl_pipe(img, candidate_labels=["tree", "plant"], threshold=0.1)
+             if len(predictions) > 0:
+                 count = len(predictions)
+             
+        # Add the count directly to checks so we can see it in logs if we wanted, 
+        # but the main pipeline expects `is_biomass, confidence, labels, checks` and handles count later. 
+        # Wait, the current signature of detect_tree doesn't return count.
+        # It returns is_biomass, confidence, labels, checks.
+        # We will add tree_count to the checks dictionary so ai_engine can extract it.
+        checks['tree_count'] = count
         
         return is_biomass, round(display_conf, 2), found_labels, checks
         
     except Exception as e:
         print(f"Vision Error: {e}")
+        checks['tree_count'] = 1
         return True, 0.85, ['forest_fallback'], checks

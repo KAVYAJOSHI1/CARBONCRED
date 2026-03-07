@@ -327,6 +327,10 @@ async function submitToBlockchain() {
     formData.append('longitude', sessionData.farmer.gps.lon);
     formData.append('source', UPLOAD_SOURCE);
 
+    // Check Dev Mode Toggle
+    const isHackathonMode = document.getElementById('hackathon-toggle') ? document.getElementById('hackathon-toggle').checked : false;
+    formData.append('hackathon_mode', isHackathonMode);
+
     try {
         const response = await fetch(`${API_BASE_URL}/test-mint/`, { method: 'POST', body: formData });
         const data = await response.json();

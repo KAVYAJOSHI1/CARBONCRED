@@ -82,8 +82,47 @@
                 </div>
 
                 <div class="card sensor-card">
-                    <div class="card-header"><i class="fas fa-satellite"></i>
-                        <h3>Digital Verification</h3>
+                    <div class="card-header"
+                        style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <i class="fas fa-satellite"></i>
+                            <h3 style="display: inline-block; margin-left: 5px;">Digital Verification</h3>
+                        </div>
+                        <div class="toggle-container" style="display: flex; align-items: center; gap: 8px;">
+                            <label class="switch"
+                                style="position: relative; display: inline-block; width: 40px; height: 20px;">
+                                <input type="checkbox" id="hackathon-toggle" checked
+                                    style="opacity: 0; width: 0; height: 0;">
+                                <span class="slider round"
+                                    style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #374151; transition: .4s; border-radius: 20px;"></span>
+                                <style>
+                                    .slider:before {
+                                        position: absolute;
+                                        content: "";
+                                        height: 16px;
+                                        width: 16px;
+                                        left: 2px;
+                                        bottom: 2px;
+                                        background-color: white;
+                                        transition: .4s;
+                                        border-radius: 50%;
+                                    }
+
+                                    input:checked+.slider {
+                                        background-color: #10b981;
+                                    }
+
+                                    input:focus+.slider {
+                                        box-shadow: 0 0 1px #10b981;
+                                    }
+
+                                    input:checked+.slider:before {
+                                        transform: translateX(20px);
+                                    }
+                                </style>
+                            </label>
+                            <small style="color: #9ca3af; font-size: 11px;">Dev Mode</small>
+                        </div>
                     </div>
 
                     <div class="sensor-module">

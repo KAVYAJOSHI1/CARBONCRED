@@ -5,8 +5,6 @@ import uuid
 import logging
 import imagehash
 from PIL import Image
-from ultralytics import YOLO
-
 # Import services
 from core.services.vision import detect_tree, analyze_green_content
 from core.services.exif import extract_metadata
@@ -17,10 +15,6 @@ from core.services.ndvi import fetch_sentinel_ndvi, correlate_ndvi
 # ==========================================
 # 1. SMART CONFIGURATION & STANDARDS
 # ==========================================
-
-# !!! HACKATHON MODE !!! 
-# Set to True to allow Indoor Testing (Soft Passes NDVI & Location)
-HACKATHON_MODE = True 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -63,7 +57,21 @@ SPECIES_DATA = {
     'poplar':   {'h': 12.0, 'rho': 0.35},
     'birch':    {'h': 10.0, 'rho': 0.60},
     'maple':    {'h': 12.0, 'rho': 0.65},
-    'default':  {'h': 6.0,  'rho': 0.60}
+    'default':  {'h': 6.0,  'rho': 0.60},
+    'banyan tree': {'h': 20.0, 'rho': 0.55},
+    'peepal tree': {'h': 18.0, 'rho': 0.50},
+    'mango tree': {'h': 15.0, 'rho': 0.65},
+    'eucalyptus tree': {'h': 30.0, 'rho': 0.70},
+    'ashoka tree': {'h': 12.0, 'rho': 0.60},
+    'babul tree': {'h': 10.0, 'rho': 0.85},
+    'sandalwood tree': {'h': 8.0, 'rho': 0.90},
+    'sal tree': {'h': 25.0, 'rho': 0.80},
+    'coconut palm': {'h': 15.0, 'rho': 0.40},
+    'tamarind tree': {'h': 15.0, 'rho': 0.75},
+    'gulmohar tree': {'h': 10.0, 'rho': 0.50},
+    'neem tree': {'h': 15.0, 'rho': 0.75},
+    'teak tree': {'h': 20.0, 'rho': 0.65},
+    'jackfruit tree': {'h': 15.0, 'rho': 0.60}
 }
 
 # --- SCIENTIFIC CONSTANTS ---
@@ -71,13 +79,6 @@ ROOT_TO_SHOOT_R = 0.26
 CARBON_FRACTION = 0.47       
 MOLECULAR_RATIO = 3.67       
 RISK_DISCOUNT_FACTOR = 0.85  
-
-try:
-    yolo_model = YOLO('yolov8n.pt') 
-    logger.info("YOLO Model Loaded Successfully!")
-except Exception as e:
-    logger.error(f"YOLO Loading Error: {e}")
-    yolo_model = None
 
 # ==========================================
 # 2. SCIENTIFIC CALCULATIONS
@@ -88,17 +89,17 @@ def get_species_metrics(ai_labels):
     best_h = SPECIES_DATA['default']['h']
     best_rho = SPECIES_DATA['default']['rho']
     
-    priority_order = ['mangrove', 'pine', 'oak', 'palm', 'bamboo', 'corn', 'rapeseed']
-    
-    for p in priority_order:
-        for label in ai_labels:
-            if p in label:
-                data = SPECIES_DATA[p]
-                return data['h'], data['rho'], p.title()
-
+    # Priority matching
     for label in ai_labels:
         for key in SPECIES_DATA:
-            if key in label:
+            if key == label:
+                data = SPECIES_DATA[key]
+                return data['h'], data['rho'], key.title()
+                
+    # Substring matching if explicit fails
+    for label in ai_labels:
+        for key in SPECIES_DATA:
+            if key in label or label in key:
                 data = SPECIES_DATA[key]
                 return data['h'], data['rho'], key.title()
                 
@@ -128,26 +129,26 @@ def calculate_credits(count, height_m, rho_val, ndvi_val=None):
 # 3. MAIN ANALYSIS PIPELINE
 # ==========================================
 
-def analyze_carbon_from_image(uploaded_image, claimed_lat=None, claimed_lon=None, source='file'):
+def analyze_carbon_from_image(uploaded_image, claimed_lat=None, claimed_lon=None, source='file', hackathon_mode=False):
     """
-    Simulates a full Azure-native pipeline for verification.
+    Main Verification Pipeline for Biomass Analysis.
     """
     temp_filename = f"temp_{uuid.uuid4().hex}.jpg"
     temp_path = os.path.join(os.getcwd(), temp_filename)
     
-    # Updated Output Dictionary: Now uses "Azure" Terminology
+    # Updated Output Dictionary: Realistic Logs
     checks = {
-        "duplicate": {"status": False, "msg": "Azure Blob: Pending Scan"},
-        "location": {"status": False, "msg": "Azure Maps: Pending Geofence"},
-        "biomass": {"status": False, "msg": "Azure Cognitive Services: Pending"},
-        "environment": {"status": False, "msg": "Planetary Computer: Skipped"},
-        "live_capture": {"status": False, "msg": "Metadata Analysis: Pending"},
-        "timestamp": {"status": False, "msg": "Temporal Lock: Pending"},
-        "depth_analysis": {"status": False, "msg": "Depth Map: Pending"}
+        "duplicate": {"status": False, "msg": "Ledger: Pending Hash Scan"},
+        "location": {"status": False, "msg": "Geo Engine: Pending Validation"},
+        "biomass": {"status": False, "msg": "Vision AI: Pending Scanning"},
+        "environment": {"status": False, "msg": "Sentinel-2: Skipped"},
+        "live_capture": {"status": False, "msg": "Metadata: Pending Scan"},
+        "timestamp": {"status": False, "msg": "Temporal: Pending Lock"},
+        "depth_analysis": {"status": False, "msg": "Depth Map: Pending Analysis"}
     }
 
     try:
-        logger.info("--- STARTING AZURE PIPELINE SIMULATION ---")
+        logger.info("--- STARTING BIOMASS PIPELINE ---")
 
         # --- STEP 0: PREPARE IMAGE ---
         uploaded_image.seek(0)
@@ -161,32 +162,31 @@ def analyze_carbon_from_image(uploaded_image, claimed_lat=None, claimed_lon=None
             uploaded_image.seek(0)
             f.write(uploaded_image.read())
 
-        # --- STEP 1: DUPLICATE CHECK (Azure Blob Storage Simulation) ---
+        # --- STEP 1: DUPLICATE CHECK (pHash) ---
         uploaded_image.seek(0)
         with Image.open(uploaded_image) as pil_img:
             img_hash = str(imagehash.phash(pil_img))
         
         if check_duplicate(img_hash):
-            if HACKATHON_MODE:
-                # "Soft Pass" renamed to "Azure Test Mode"
-                checks['duplicate'] = {"status": True, "msg": "Azure Blob: Duplicate Flagged (Test Mode Override)"}
+            if hackathon_mode:
+                checks['duplicate'] = {"status": True, "msg": "Ledger: Duplicate (Dev Override)"}
             else:
-                checks['duplicate'] = {"status": False, "msg": "Azure Blob Error: Duplicate Asset Found"}
+                checks['duplicate'] = {"status": False, "msg": "Ledger Error: Double-Spend Detected"}
                 return 0.0, 0, False, checks
         else:
-            checks['duplicate'] = {"status": True, "msg": "Azure Blob Storage: Unique Asset"}
+            checks['duplicate'] = {"status": True, "msg": "Ledger: Unique Asset Validated"}
 
-        # --- STEP 2: LOCATION & TIME VERIFICATION (Azure Maps Simulation) ---
+        # --- STEP 2: LOCATION & TIME VERIFICATION ---
         metadata = extract_metadata(temp_path)
         
         # A. Location Check
         if claimed_lat and claimed_lon and source == 'file':
             # Note: claimed_lat is string from request, convert to float
             is_valid_loc, loc_msg = validate_location(float(claimed_lat), float(claimed_lon), metadata['lat'], metadata['lon'])
-            checks['location'] = {"status": is_valid_loc, "msg": f"Azure Maps: {loc_msg}"}
+            checks['location'] = {"status": is_valid_loc, "msg": f"Geo Engine: {loc_msg}"}
             
-            if not is_valid_loc and HACKATHON_MODE:
-                 checks['location']['msg'] = "Azure Maps: Geofence Warning (Dev Mode Bypassed)"
+            if not is_valid_loc and hackathon_mode:
+                 checks['location']['msg'] = "Geo Engine: Invalid Coordinates (Dev Override)"
                  # In Dev Mode, we might want to proceed even if location is wrong, 
                  # but for "Gatekeeper" strictness, usually it returns False. 
                  # Keeping logic consistent with original:
@@ -199,11 +199,11 @@ def analyze_carbon_from_image(uploaded_image, claimed_lat=None, claimed_lon=None
         else:
             checks['timestamp'] = {"status": False, "msg": "No Timestamp Found (Possible Upload/edit)"}
         
-        if HACKATHON_MODE and not checks['timestamp']['status']:
+        if hackathon_mode and not checks['timestamp']['status']:
              checks['timestamp']['status'] = True
-             checks['timestamp']['msg'] += " (Dev Mode Override)"
-
-        # --- STEP 3: AI BIOMASS ANALYSIS (Azure Custom Vision Simulation) ---
+             checks['timestamp']['msg'] += " (Dev Override)"
+             
+        # --- STEP 3: AI BIOMASS ANALYSIS ---
         try:
             # detect_tree now returns: is_biomass, confidence, labels, vision_checks
             result = detect_tree(temp_path)
@@ -226,19 +226,13 @@ def analyze_carbon_from_image(uploaded_image, claimed_lat=None, claimed_lon=None
             labels = ['forest']
 
         if not is_biomass:
-             checks['biomass'] = {"status": False, "msg": "Azure Cognitive: Non-Biomass Object Rejected"}
+             checks['biomass'] = {"status": False, "msg": "Vision AI: Non-Biomass Object Rejected"}
              return 0.0, 0, False, checks
 
-        # --- STEP 4: COUNTING (YOLO as Azure Object Detection) ---
-        count = 1
-        if yolo_model:
-            try:
-                results = yolo_model(temp_path, verbose=False)
-                found = len(results[0].boxes)
-                if found > 0: count = found
-            except: pass
+        # --- STEP 4: COUNTING ---
+        count = checks.get('tree_count', 1)
 
-        # --- STEP 5: ENVIRONMENT (Azure Planetary Computer Simulation) ---
+        # --- STEP 5: ENVIRONMENT (Sentinel-2 Satellite Engine) ---
         ndvi_score = 0.75 
         
         if claimed_lat and claimed_lon:
@@ -247,21 +241,19 @@ def analyze_carbon_from_image(uploaded_image, claimed_lat=None, claimed_lon=None
             
             msg, passed = correlate_ndvi(real_ndvi, is_biomass)
             
-            # Format message to look like Azure Planetary Computer
-            checks['environment'] = {"status": passed, "msg": f"Planetary Computer: {msg}"}
+            checks['environment'] = {"status": passed, "msg": f"Sentinel-2: {msg}"}
             
             if passed:
                 ndvi_score = real_ndvi
             else:
-                if HACKATHON_MODE:
-                    # Rename "Soft Pass" to "Data Anomaly Override"
+                if hackathon_mode:
                     checks['environment']['status'] = True
-                    checks['environment']['msg'] = "Planetary Computer: Data Anomaly (Dev Override)"
+                    checks['environment']['msg'] = "Sentinel-2: Data Anomaly (Dev Override)"
                     ndvi_score = 0.65 
                 else:
                     return 0.0, 0, False, checks
         else:
-             checks['environment'] = {"status": True, "msg": "Planetary Computer: Skipped (Missing Telemetry)"}
+             checks['environment'] = {"status": True, "msg": "Sentinel-2: Skipped (Missing Telemetry)"}
 
         # --- STEP 6: DYNAMIC CALCULATION ---
         avg_h, avg_rho, species_name = get_species_metrics(labels)
@@ -270,7 +262,7 @@ def analyze_carbon_from_image(uploaded_image, claimed_lat=None, claimed_lon=None
         # Final Biomass Message
         checks['biomass'] = {
             "status": True,
-            "msg": f"Azure Custom Vision: {species_name} Verified (Confidence: 99%)"
+            "msg": f"Vision AI: {species_name} Verified (Confidence: 99%)"
         }
         
         logger.info(f"SUCCESS: {tco2e:.4f} Credits | Species: {species_name}")

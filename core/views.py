@@ -30,8 +30,9 @@ def test_mint_view(request):
             gps_lat = float(request.POST.get('latitude', '0.0'))
             gps_lon = float(request.POST.get('longitude', '0.0'))
             source = request.POST.get('source', 'file')
+            hackathon_mode = request.POST.get('hackathon_mode', 'false').lower() == 'true'
 
-            print(f"RECEIVED BATCH: {len(images)} files from {gps_lat}, {gps_lon}")
+            print(f"RECEIVED BATCH: {len(images)} files from {gps_lat}, {gps_lon} | DevMode: {hackathon_mode}")
 
             batch_mint_tons = 0.0
             batch_total_trees = 0
@@ -72,7 +73,8 @@ def test_mint_view(request):
                     img, 
                     claimed_lat=str(gps_lat), 
                     claimed_lon=str(gps_lon), 
-                    source=source
+                    source=source,
+                    hackathon_mode=hackathon_mode
                 )
 
                 # D. BIOMASS DELTA CHECK (New - Old)

@@ -1,112 +1,96 @@
-# CarbonCred Biomass Verification Protocol
+# CarbonVerse: Enterprise Carbon Offset Verification
 
 ## Project Overview
 
-CarbonCred is a decentralized verification platform designed to validate carbon offset claims through a multi-layered AI analysis engine. The system allows farmers to capture and upload images of biomass (trees/crops), which are then rigorously analyzed to prevent fraud, ensure data integrity, and calculate accurate carbon credit allocations.
+Welcome to **CarbonVerse**, a next-generation decentralized platform designed to validate carbon offset claims using advanced Artificial Intelligence. 
 
-## AI Verification Architecture (The Gatekeepers)
-
-The core of the system relies on a sequential "Gatekeeper" architecture. An image must pass all validation layers to be Minted as a carbon credit on the blockchain.
-
-### 1. Location Integrity Gatekeeper
-**Purpose:** Ensures the physical asset exists at the claimed coordinates.
-**Mechanism:** The system extracts EXIF metadata from the uploaded image and calculates the geodesic distance between the image's internal GPS tag and the user's claimed location.
-**Failure Condition:** If the distance exceeds the allowable threshold, or if GPS metadata is stripped/missing, the asset is rejected immediately.
-
-### 2. Biomass Classification Gatekeeper (Deep Learning)
-**Purpose:** Verifies that the image actually contains valid biomass (trees, dense vegetation) rather than irrelevant objects.
-**Model:** TensorFlow MobileNetV2.
-**Mechanism:** A pre-trained Convolutional Neural Network (CNN) analyzes the visual features of the image. It outputs a confidence score indicating the probability of the image being "Biomass".
-**Failure Condition:** If the confidence score is below the set threshold (e.g., 40%), the image is rejected as "Not Biomass".
-
-### 3. Duplicate Prevention Gatekeeper
-**Purpose:** Prevents double-spending of carbon assets (uploading the same tree multiple times).
-**Mechanism:** Perceptual Hashing (pHash). unlike standard file hashing (MD5), pHash generates a fingerprint based on the visual structure of the image. This allows the system to detect duplicates even if the file has been slightly resized or re-saved.
-**Failure Condition:** If the generated fingerprint matches a hash already stored in the active ledger, the image is rejected as a "Duplicate".
-
-### 4. Object Quantification (YOLOv8)
-**Purpose:** Estimates the density and potential carbon value of the asset.
-**Model:** YOLOv8 (You Only Look Once).
-**Mechanism:** An object detection model scans the verified biomass to count individual organic structures (trees, plants). This count contributes to the final carbon tonnage estimation.
-
-### 5. Environmental Gatekeeper (Google Earth Engine)
-**Purpose:** Cross-references the ground-level image with real-time satellite spectral data to ensure environmental consistency.
-**Mechanism:** The system uses **Google Earth Engine (GEE)** to analyze Sentinel-2 (Surface Reflectance) data for the claimed GPS coordinates to calculate the Normalized Difference Vegetation Index (NDVI).
-**Verification:** It fetches the least cloudy image from the last 30 days and computes the mean NDVI.
-**Failure Condition:** If the satellite data shows "Barren/Urban" (low NDVI) while the user claims to be in a "Forest" (high biomass), the asset is flagged for review or rejected as a discrepancy.
-
-### 6. Carbon Credit Issuance (Scientific Formula)
-**Purpose:** Calculates the precise tCO2e (Tonnes of Carbon Dioxide Equivalent) stored in the verified biomass.
-**Mechanism:** Uses the molecular weight method rather than simple heuristics.
-**Formula:** 
-`tCO2e = (Biomass_kg / 1000) * 0.47 * (44/12)`
-*   **Biomass:** Estimated from computer vision volume (avg 1000kg/tree).
-*   **0.47:** Carbon Fraction (Scientific Baseline for dry wood).
-*   **44/12:** Ratio of CO2 molecular weight to Carbon atomic weight.
+Our system allows land owners to capture images of their trees and crops. These images are rigorously analyzed by our AI engine to prevent fraud, ensure data integrity, and accurately calculate how much carbon the plants absorb. These carbon credits can then be securely minted and purchased by corporate buyers to offset their emissions.
 
 ---
 
-## Configuration
-Before running the application, you must configure the environment variables.
-1.  Copy `.env.example` to `.env`.
-2.  **Google Earth Engine Setup (Required for Real Data):**
-    *   Create a Google Cloud Project and enable the **Earth Engine API**.
-    *   Create a **Service Account** and download the JSON key file.
-    *   Save the key file in the project root (e.g., `gee-key.json`).
-    *   Update `.env`:
-        ```bash
-        GEE_SERVICE_ACCOUNT_KEY_FILE=./gee-key.json
-        ```
+## The Three User Roles
+
+CarbonVerse is built upon a professional three-role ecosystem to manage the entire lifecycle of a carbon credit:
+
+### 1. The Offset Generator (Seller)
+**Who they are:** Farmers, landowners, or agro-forestry managers.
+**What they do:** They use the CarbonVerse app on their mobile devices to capture geo-tagged photos of their biomass (trees/crops). They upload this evidence to our AI engine to automatically generate and verify Carbon Credits.
+
+### 2. Corporate Compliance (Buyer)
+**Who they are:** Businesses, industrialists, and corporations looking to reach "Net Zero" emissions.
+**What they do:** They access the CarbonVerse Marketplace to securely purchase AI-verified carbon credits from the Sellers, track their pollution debt, and manage their environmental compliance.
+
+### 3. Network Overseer (Admin)
+**Who they are:** System administrators and protocol auditors.
+**What they do:** They have a God's-eye view of the entire network. They monitor active seller nodes, track the total volume of carbon credits generated, and ensure the system is running smoothly without fraudulent activity.
+
+---
+
+## How the AI Magic Works (The Gatekeepers)
+
+To ensure every carbon credit is 100% real and accurate, uploaded images must pass through our strict "Gatekeeper" checks before they become valid credits:
+
+1. **Location Check (Geospatial):** We check the hidden GPS data in the photo to ensure the farmer is actually standing where they claim to be.
+2. **AI Vision Check (Deep Learning):** Our AI looks at the photo to confirm it actually contains trees or valid plants, and not just a picture of a wall or a car.
+3. **Anti-Fraud Check (pHash Duplicate Detection):** We generate a unique structural "fingerprint" of the photo. If a user tries to upload the exact same picture of a tree twice to get double credits, the system blocks it.
+4. **Biomass Calculation (YOLO Object Detection):** The AI counts the number of trees and estimates their size to scientifically calculate how many tons of CO2 they absorb.
+
+---
 
 ## Installation and Local Setup
+
+Follow these simple steps to get CarbonVerse running on your local machine.
+
 ### Prerequisites
-1. Python 3.9 or higher
-2. PIP (Python Package Manager)
+- **Python 3.9 or higher** installed on your computer.
+- **Git** (optional, for cloning the code).
 
-### Steps
+### Step-by-Step Guide
 
-1. **Install Dependencies**
-   Navigate to the project root directory and install the required Python packages:
-   ```bash
-   pip install -r requirements.txt
-   ```
+#### 1. Configure the Environment
+The application needs some secret keys to work properly.
+- Look for a file named `.env.example` in the main folder.
+- Copy it and rename the copy to `.env`.
+- *(Optional)* If you are using real satellite data, you will need to add your Google Earth Engine (GEE) JSON key file to this folder and update the `.env` file to point to it.
 
-2. **Run Database Migrations**
-   Initialize the database schema:
-   ```bash
-   python manage.py migrate
-   ```
+#### 2. Install Dependencies
+Open your terminal (Command Prompt or PowerShell) and navigate strictly into the project folder (`CARBONCRED-main`). Then, run this command to download all the necessary code libraries:
+```bash
+pip install -r requirements.txt
+```
 
-3. **Start Local Server**
-   Launch the Django development server:
-   ```bash
-   python manage.py runserver
-   ```
-   The application will be accessible at `http://127.0.0.1:8000/`.
+#### 3. Setup the Database (Migrations)
+Before running the app for the first time, you must set up the database structure. Run these two commands in order:
+
+Make sure you have created the initial migration files:
+```bash
+python manage.py makemigrations
+```
+
+Then, apply them to create the database:
+```bash
+python manage.py migrate
+```
+*Note: If you ever see an error like `no such column`, running `python manage.py migrate` usually fixes it!*
+
+#### 4. Start the Application Server
+Now you are ready to launch CarbonVerse! Run:
+```bash
+python manage.py runserver
+```
+Open your web browser and go to: `http://127.0.0.1:8000/`
 
 ---
 
-## Remote Access Configuration (ngrok)
+## Testing on your Phone (Ngrok)
 
-To test the application on a mobile device (required for Camera/GPS features), you must expose your local server to the internet using ngrok.
+If you want to test the camera and GPS features on your actual smartphone (as a Farmer would), you need to securely tunnel your local server to the internet so your phone can reach it.
 
-### 1. Install ngrok
-Download the ngrok executable for your operating system from the official website or install via package manager (e.g., Chocolatey on Windows):
-```bash
-choco install ngrok
-```
+1. **Install Ngrok:** Download and install ngrok from their website.
+2. **Start the Tunnel:** While your Django server is running (from Step 4 above), open a *new* terminal window and run:
+   ```bash
+   ngrok http 8000
+   ```
+3. **Access on Phone:** Ngrok will give you a "Forwarding" link that looks something like `https://random-words.ngrok-free.dev`. Open this link on your phone's browser!
 
-### 2. Launch ngrok
-Open a new terminal window. If ngrok is not in your system PATH, navigate (`cd`) to the directory where `ngrok.exe` is located.
-
-Run the following command to tunnel port 8000:
-```bash
-ngrok http 8000
-```
-
-### 3. Accessing the Application
-1. Copy the "Forwarding" URL provided by ngrok (e.g., `https://unwhitewashed-enzo-piezometrical.ngrok-free.dev/`).
-2. Open this URL on your mobile device's browser.
-3. The application will automatically detect the dynamic URL and configure the API endpoints accordingly.
-
-**Note:** Ensure `DEBUG=True` is set in `core/settings.py` for development purposes, and that the ngrok domain is included in `CSRF_TRUSTED_ORIGINS` (already configured in the default setup).
+*(Make sure your phone gives the browser permission to use the Camera and Location services).*

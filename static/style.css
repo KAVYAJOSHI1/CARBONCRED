@@ -2,30 +2,34 @@
    1. VARIABLES & RESET
 ========================================= */
 :root {
-    --bg-dark: #0f172a;
-    /* Deep Navy */
-    --bg-card: #1e293b;
-    /* Card Navy */
-    --bg-input: #334155;
-    /* Inputs */
+    /* --- CarbonVerse Enterprise Theme --- */
+    --bg-dark: #070B14;
+    /* Deep Charcoal/Slate */
+    --bg-card: #0F1626;
+    /* Slightly lighter card background */
+    --bg-input: #1A2235;
+    /* Input backgrounds */
 
-    --primary: #10b981;
-    /* Emerald Green */
-    --primary-hover: #059669;
+    --primary: #00F0FF;
+    /* Electric Cyan for crisp highlights */
+    --primary-hover: #00D1E0;
 
-    --accent: #3b82f6;
-    /* Tech Blue */
-    --danger: #ef4444;
-    /* Red */
-    --warning: #f59e0b;
+    --accent: #00C853;
+    /* Deep Emerald for success/safe actions */
+    --danger: #FF3B30;
+    /* Sharp Red */
+    --warning: #FF9500;
     /* Amber */
 
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
+    --text-main: #FFFFFF;
+    --text-muted: #8E9BAE;
 
-    --border: #334155;
-    --radius: 12px;
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --border: #232D42;
+    --radius: 8px;
+    /* Sharper edges for enterprise look */
+    --shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    --glass: rgba(15, 22, 38, 0.7);
+    /* Translucent background */
 }
 
 * {
@@ -104,10 +108,12 @@ body {
 }
 
 .nav-btn.active {
-    background: var(--primary);
-    color: #0f172a;
+    background: rgba(0, 240, 255, 0.1);
+    color: var(--primary);
     font-weight: 700;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 8px 8px 0;
+    box-shadow: inset 2px 0 12px rgba(0, 240, 255, 0.05);
 }
 
 .status-card {
@@ -205,7 +211,14 @@ body {
 
 .card-header h3 {
     margin: 0;
-    font-size: 18px;
+    font-size: 16px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-main);
+}
+
+.card-header i {
+    color: var(--primary);
 }
 
 /* Forms & Inputs */
@@ -307,20 +320,23 @@ select:focus {
     background: var(--primary);
     color: #000;
     border: none;
-    padding: 16px;
-    border-radius: 8px;
+    padding: 14px;
+    border-radius: var(--radius);
     font-weight: 700;
+    letter-spacing: 1px;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s ease;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
-    font-size: 16px;
+    gap: 10px;
+    font-size: 14px;
+    text-transform: uppercase;
 }
 
 .btn-primary:hover:not(:disabled) {
     background: var(--primary-hover);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
     transform: translateY(-1px);
 }
 
@@ -568,13 +584,16 @@ select:focus {
         bottom: 0;
         left: 0;
         width: 100%;
-        background: var(--bg-card);
+        background: var(--glass);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
         border-top: 1px solid var(--border);
         display: flex;
         justify-content: space-around;
-        padding: 10px;
-        z-index: 100;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+        padding: 5px 10px 15px 10px;
+        /* Accounts for iOS bottom bar */
+        z-index: 1000;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
     }
 
     .menu-category {
@@ -603,10 +622,16 @@ select:focus {
     .nav-btn.active {
         color: var(--primary);
         font-weight: 600;
+        border-left: none;
+        border-bottom: 2px solid var(--primary);
+        border-radius: 0;
+        background: transparent;
     }
 
     .nav-btn.active i {
         transform: translateY(-2px);
+        color: var(--primary);
+        text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
         transition: 0.2s;
     }
 
@@ -793,4 +818,30 @@ select:focus {
     border-radius: 20px;
     color: var(--accent);
     border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--surface-light);
+    color: var(--text-light);
+    padding: 12px 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
 }

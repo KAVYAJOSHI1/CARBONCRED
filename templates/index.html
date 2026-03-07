@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>India CO2 | National Carbon Registry</title>
+    <title>CarbonVerse | Enterprise Carbon Registry</title>
     <link rel="stylesheet" href="/static/style.css?v=2.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,18 +16,21 @@
         <div class="brand-section">
             <div class="logo-icon"><i class="fas fa-leaf"></i></div>
             <div class="logo-text">
-                <h2>INDIA CO2</h2>
-                <small>Digital Twin Registry</small>
+                <h2>CARBONVERSE</h2>
+                <small>Enterprise Registry</small>
             </div>
         </div>
 
         <nav class="main-menu">
             <div class="menu-category">PORTALS</div>
-            <button class="nav-btn active" onclick="switchInterface('farmer')" id="nav-farmer">
-                <i class="fas fa-tractor"></i> <span>Farmer Node</span>
+            <button class="nav-btn active" onclick="switchInterface('admin')" id="nav-admin">
+                <i class="fas fa-shield-alt"></i> <span>Admin Console</span>
             </button>
-            <button class="nav-btn" onclick="switchInterface('industrialist')" id="nav-indus">
-                <i class="fas fa-industry"></i> <span>Industrialist</span>
+            <button class="nav-btn" onclick="switchInterface('seller')" id="nav-seller">
+                <i class="fas fa-leaf"></i> <span>Seller Node</span>
+            </button>
+            <button class="nav-btn" onclick="switchInterface('buyer')" id="nav-buyer">
+                <i class="fas fa-building"></i> <span>Corporate Buyer</span>
             </button>
 
             <div class="menu-category">NETWORK STATUS</div>
@@ -57,11 +60,43 @@
             </div>
         </header>
 
-        <section id="view-farmer" class="interface-section">
+        <section id="view-admin" class="interface-section">
+            <div class="card form-card" style="margin-bottom: 25px;">
+                <div class="card-header"><i class="fas fa-server"></i>
+                    <h3>Network Overview</h3>
+                </div>
+                <div class="stats-row compact">
+                    <div class="stat-item">
+                        <small>ACTIVE NODES</small>
+                        <strong>3,402</strong>
+                    </div>
+                    <div class="stat-item">
+                        <small>TOTAL COMPLIANCE</small>
+                        <strong class="highlight">94.2%</strong>
+                    </div>
+                    <div class="stat-item">
+                        <small>PENDING AUDITS</small>
+                        <strong class="danger-text">12</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card action-card">
+                <div class="card-header"><i class="fas fa-clipboard-list"></i>
+                    <h3>System Logs</h3>
+                </div>
+                <div class="batch-results" style="margin-top:0;">
+                    <div class="log-item success"><span>System initialized</span><span>Just now</span></div>
+                    <div class="log-item success"><span>Blockchain sync complete</span><span>2m ago</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-seller" class="interface-section hidden">
             <div class="grid-layout">
                 <div class="card form-card">
                     <div class="card-header"><i class="fas fa-id-card"></i>
-                        <h3>Farmer Details</h3>
+                        <h3>Seller Details</h3>
                     </div>
                     <form onsubmit="return false;">
                         <div class="form-group">
@@ -211,7 +246,7 @@
             </div>
         </section>
 
-        <section id="view-industrialist" class="interface-section hidden">
+        <section id="view-buyer" class="interface-section hidden">
 
             <div class="compliance-card">
                 <div class="compliance-header">

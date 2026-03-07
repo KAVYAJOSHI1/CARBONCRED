@@ -2,75 +2,99 @@
 // CONFIGURATION & STATE
 // ============================================
 const API_BASE_URL = window.location.origin; // Dynamic for ngrok/localhost
-let CURRENT_ROLE = 'farmer';
 
-// Default State: Includes "Target Emissions" for the Industrialist Story
-const defaultData = {
-    farmer: {
+// Multi-Role Mock Data Structure
+const defaultSessionData = {
+    admin: {
+        name: "SysAdmin Node",
+        role: "Network Overseer",
+        address: "0x0000...0000"
+    },
+    seller: {
+        name: "AgriCorp Ltd.",
+        role: "Verified Offset Generator",
         gps: null,
         images: [],
         listings: [],
         verified_amount: "0.0 RCC",
-        logs: [] // Stores the Audit Report
+        logs: [], // Stores the Audit Report
+        area: 2.5,
+        address: "0x1E0e...6bAE"
     },
-    industrialist: {
-        rcc_balance: 5.0,
-        eth_balance: 0.45,
-        target_emissions: 120.0 // The "Pollution Debt" to solve
+    buyer: {
+        name: "Global Tech Inc.",
+        role: "Corporate Compliance",
+        address: "0xC21B...8A9D",
+        emissions: 120.0, // The "Pollution Debt" to solve
+        credits: 0.0,
+        compliant: false
     }
 };
 
 // Load from Memory or use Default
-let sessionData = JSON.parse(localStorage.getItem('carbonSession')) || defaultData;
+let sessionData = JSON.parse(localStorage.getItem('carbonVerseSession_v2')) || defaultSessionData;
 
 function saveState() {
-    localStorage.setItem('carbonSession', JSON.stringify(sessionData));
+    localStorage.setItem('carbonVerseSession_v2', JSON.stringify(sessionData));
 }
 
-// ============================================
-// 1. UI NAVIGATION & ROUTING
-// ============================================
+// ==========================================
+// 1. INITIATION & NAVIGATION
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    switchInterface('admin');
+
+    // Simulate Network Block Loading
+    setInterval(() => {
+        document.getElementById('block-num').innerText =
+            '5,39' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    }, 4000);
+});
+
 function switchInterface(role) {
-    CURRENT_ROLE = role;
+    console.log(`Switching interface to: ${role}`);
 
-    // Toggle Active Buttons
+    // 1. Update Navigation Buttons
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById(role === 'farmer' ? 'nav-farmer' : 'nav-indus').classList.add('active');
+    const activeBtn = document.getElementById(`nav-${role}`);
+    if (activeBtn) activeBtn.classList.add('active');
 
-    // Toggle Views
-    document.getElementById('view-farmer').classList.add('hidden');
-    document.getElementById('view-industrialist').classList.add('hidden');
-    document.getElementById(role === 'farmer' ? 'view-farmer' : 'view-industrialist').classList.remove('hidden');
+    // 2. Hide all views
+    document.getElementById('view-admin').classList.add('hidden');
+    document.getElementById('view-seller').classList.add('hidden');
+    document.getElementById('view-buyer').classList.add('hidden');
 
-    updateHeader(role);
+    // 3. Show requested view
+    const viewElement = document.getElementById(`view-${role}`);
+    if (viewElement) viewElement.classList.remove('hidden');
+
+    // 4. Update Header and User Profile
+    const userData = sessionData[role];
+    if (userData) {
+        document.getElementById('current-user-name').innerText = userData.name;
+        document.getElementById('current-user-role').innerText = userData.role;
+        document.getElementById('wallet-address').innerText = userData.address;
+    }
+
+    // 5. Update Page Heading
+    const headerElement = document.getElementById('page-heading');
+    if (role === 'admin') headerElement.innerText = 'Network Overview';
+    if (role === 'seller') headerElement.innerText = 'Offset Generation Node';
+    if (role === 'buyer') headerElement.innerText = 'Corporate Compliance Dashboard';
 
     // Restore specific state based on role
-    if (role === 'farmer' && sessionData.farmer.verified_amount !== "0.0 RCC") {
-        restoreFarmerUI();
+    if (role === 'seller' && sessionData.seller.verified_amount !== "0.0 RCC") {
+        restoreSellerUI();
     }
-    if (role === 'industrialist') {
+    if (role === 'buyer') {
         loadMarketplace(); // Also triggers Compliance UI update
-    }
-}
-
-function updateHeader(role) {
-    if (role === 'farmer') {
-        document.getElementById('current-user-name').innerText = "Kavya Joshi";
-        document.getElementById('current-user-role').innerText = "Verified Farmer";
-        document.getElementById('wallet-address').innerText = "0x1E0e...6bAE";
-        document.getElementById('page-heading').innerText = "Farm Verification Console";
-    } else {
-        document.getElementById('current-user-name').innerText = "Adani Green Energy";
-        document.getElementById('current-user-role').innerText = "Industrial Buyer";
-        document.getElementById('wallet-address').innerText = "0x5f63...705b";
-        document.getElementById('page-heading').innerText = "Carbon Offset Marketplace";
     }
 }
 
 // ============================================
 // 2. FARMER LOGIC: RESTORE UI (AUDIT REPORT)
 // ============================================
-function restoreFarmerUI() {
+function restoreSellerUI() {
     // 1. Lock Mint Button
     const btn = document.getElementById('btn-mint');
     btn.innerHTML = '<i class="fas fa-check-circle"></i> VERIFIED ON-CHAIN';
@@ -79,26 +103,26 @@ function restoreFarmerUI() {
 
     // 2. Show Results
     const projEl = document.getElementById('projected-rcc');
-    projEl.innerText = sessionData.farmer.verified_amount;
+    projEl.innerText = sessionData.seller.verified_amount;
     projEl.style.color = "#10b981";
 
     document.getElementById('ai-confidence').innerText = "100%";
 
     // 3. Lock GPS UI
-    if (sessionData.farmer.gps) {
+    if (sessionData.seller.gps) {
         document.getElementById('gps-result').classList.remove('hidden');
         document.querySelector('.gps-box button').classList.add('hidden');
-        document.getElementById('val-lat').innerText = sessionData.farmer.gps.lat;
-        document.getElementById('val-lon').innerText = sessionData.farmer.gps.lon;
+        document.getElementById('val-lat').innerText = sessionData.seller.gps.lat;
+        document.getElementById('val-lon').innerText = sessionData.seller.gps.lon;
         // 4. RENDER AUDIT LOG (Detailed Result Section)
         const logBox = document.getElementById('batch-results');
         const logContainer = document.getElementById('detailed-results-container');
 
-        if (sessionData.farmer.logs && sessionData.farmer.logs.length > 0) {
+        if (sessionData.seller.logs && sessionData.seller.logs.length > 0) {
             logBox.classList.remove('hidden');
             logContainer.innerHTML = '';
 
-            sessionData.farmer.logs.forEach(item => {
+            sessionData.seller.logs.forEach(item => {
                 const card = document.createElement('div');
                 // Check status string (ACCEPTED vs REJECTED)
                 const isSuccess = item.status === "ACCEPTED";
@@ -108,32 +132,32 @@ function restoreFarmerUI() {
                 let checkHTML = '';
                 if (item.checks) {
                     checkHTML = `
-                        <div class="result-details">
-                            ${renderCheck('Location', item.checks.location)}
+    <div class="result-details">
+        ${renderCheck('Location', item.checks.location)}
                             ${renderCheck('Biomass', item.checks.biomass)}
                             ${renderCheck('Duplicate', item.checks.duplicate)}
                             ${renderCheck('Environment', item.checks.environment)}
                         </div>
-                    `;
+    `;
                 }
 
                 card.innerHTML = `
-                <div class="result-header">
+    <div class="result-header">
                     <strong><i class="fas ${isSuccess ? 'fa-check-circle' : 'fa-times-circle'}"></i> ${item.file}</strong>
                     <span class="status-tag ${isSuccess ? 'valid' : 'invalid'}">${item.status}</span>
                 </div>
-                <div class="result-body">
-                    ${isSuccess
+    <div class="result-body">
+        ${isSuccess
                         ? `<p class="result-value">+${item.co2} Tons CO2</p>`
                         : `<p class="result-reason">Reason: ${item.reason}</p>`
                     }
-                    ${checkHTML}
-                </div>
-            `;
+        ${checkHTML}
+    </div>
+`;
                 logContainer.appendChild(card);
             });
 
-            document.getElementById('batch-badge').innerText = `${sessionData.farmer.logs.length} Processed`;
+            document.getElementById('batch-badge').innerText = `${sessionData.seller.logs.length} Processed`;
         }
         // 5. ADD "START NEW BATCH" BUTTON
         // Only add if it doesn't exist yet
@@ -155,7 +179,7 @@ function renderCheck(label, check) {
     const icon = check.status ? 'fa-check' : 'fa-times';
     const color = check.status ? 'text-green-500' : 'text-red-500';
     return `
-        <div class="check-item ${check.status ? 'pass' : 'fail'}">
+    <div class="check-item ${check.status ? 'pass' : 'fail'}">
             <i class="fas ${icon}"></i> 
             <span>${label}: <strong>${check.msg}</strong></span>
         </div>
@@ -203,7 +227,7 @@ function previewImage(input) {
             prompt.style.padding = '5px 10px';
             prompt.style.borderRadius = '20px';
 
-            sessionData.farmer.images = input.files;
+            sessionData.seller.images = input.files;
             calculateConfidence();
         }
         reader.readAsDataURL(input.files[0]);
@@ -252,7 +276,7 @@ function captureSnapshot() {
         stopCamera();
 
         // Update Session Data
-        sessionData.farmer.images = [blob];
+        sessionData.seller.images = [blob];
         calculateConfidence();
 
         // UI Controls
@@ -274,7 +298,7 @@ function captureGPS() {
             const lat = pos.coords.latitude.toFixed(4);
             const lon = pos.coords.longitude.toFixed(4);
 
-            sessionData.farmer.gps = { lat, lon };
+            sessionData.seller.gps = { lat, lon };
             saveState();
 
             document.getElementById('val-lat').innerText = lat;
@@ -288,8 +312,8 @@ function captureGPS() {
 
 function calculateConfidence() {
     // Enable button only if GPS + Images exist
-    if (sessionData.farmer.gps && sessionData.farmer.images) {
-        const count = sessionData.farmer.images.length;
+    if (sessionData.seller.gps && sessionData.seller.images) {
+        const count = sessionData.seller.images.length;
 
         document.getElementById('ai-confidence').innerText = "Ready";
         document.getElementById('ai-confidence').style.color = "#10b981";
@@ -304,31 +328,50 @@ function calculateConfidence() {
     }
 }
 
+// Helper function to convert data URL to File object
+async function dataURLtoFile(dataurl, filename) {
+    const res = await fetch(dataurl);
+    const blob = await res.blob();
+    return new File([blob], filename, { type: blob.type });
+}
+
 // ============================================
 // 4. SUBMIT BATCH TO BLOCKCHAIN
 // ============================================
 async function submitToBlockchain() {
     const btn = document.getElementById('btn-mint');
+    const isHackathonMode = document.getElementById('hackathon-toggle') ? document.getElementById('hackathon-toggle').checked : false;
+
+    const checkGpsResult = document.getElementById('gps-result');
+    if (checkGpsResult && checkGpsResult.classList.contains('hidden') && !isHackathonMode) {
+        showToast("Error: Complete Geo-Tagging First", "error");
+        return;
+    }
+
+    const fileInput = document.getElementById('file-upload');
+    const images = (UPLOAD_SOURCE === 'camera') ?
+        [await dataURLtoFile(document.getElementById('camera-snapshot').src, 'snapshot.jpg')] :
+        fileInput.files;
+
+    if (images.length === 0) {
+        showToast("Please upload images or take a snapshot first.", "error");
+        return;
+    }
+
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> AUDITING BATCH...';
     showToast("Uploading to AI Engine...", "info");
 
     const formData = new FormData();
-    // Append images based on source
-    if (UPLOAD_SOURCE === 'camera' && CAMERA_BLOB) {
-        formData.append('images', CAMERA_BLOB, 'camera_capture.jpg');
-    } else {
-        for (let i = 0; i < sessionData.farmer.images.length; i++) {
-            formData.append('images', sessionData.farmer.images[i]);
-        }
+    for (let i = 0; i < images.length; i++) {
+        formData.append('images', images[i]);
     }
 
-    formData.append('latitude', sessionData.farmer.gps.lat);
-    formData.append('longitude', sessionData.farmer.gps.lon);
+    formData.append('latitude', sessionData.seller.gps.lat);
+    formData.append('longitude', sessionData.seller.gps.lon);
     formData.append('source', UPLOAD_SOURCE);
 
     // Check Dev Mode Toggle
-    const isHackathonMode = document.getElementById('hackathon-toggle') ? document.getElementById('hackathon-toggle').checked : false;
     formData.append('hackathon_mode', isHackathonMode);
 
     try {
@@ -344,11 +387,11 @@ async function submitToBlockchain() {
             showToast("Batch Audit Successful!", "success");
 
             // SAVE RESULTS TO SESSION
-            sessionData.farmer.verified_amount = data.ai_data.co2_tons + " RCC";
-            sessionData.farmer.logs = data.batch_log; // Save the log list
+            sessionData.seller.verified_amount = data.ai_data.co2_tons + " RCC";
+            sessionData.seller.logs = data.batch_log; // Save the log list
 
             // Add to User's Listing Inventory
-            sessionData.farmer.listings.push({
+            sessionData.seller.listings.push({
                 farmer: "Kavya Joshi",
                 amount: data.ai_data.co2_tons + " RCC",
                 hash: data.tx_hash,
@@ -357,16 +400,16 @@ async function submitToBlockchain() {
             saveState();
 
             // Update UI
-            restoreFarmerUI();
+            restoreSellerUI();
 
         } else {
             // Logic Error (e.g. 200 OK but status="Error" from backend)
             // If we have detailed logs, show them instead of just erroring out
             if (data.batch_log && data.batch_log.length > 0) {
                 // ... logic to handle logs
-                sessionData.farmer.logs = data.batch_log;
+                sessionData.seller.logs = data.batch_log;
                 saveState();
-                restoreFarmerUI();
+                restoreSellerUI();
 
                 // Specific toast message (temporary)
                 showToast("Verification Finished. See Report below.", "warning");
@@ -376,7 +419,7 @@ async function submitToBlockchain() {
 
             // Always reset button if it was a soft reject with logs
             btn.disabled = false;
-            btn.innerHTML = `<i class="fas fa-cube"></i> RE-TRY BATCH`;
+            btn.innerHTML = `<i class="fas fa-cube"></i> RETRY BATCH`;
 
             // Auto-scroll to results
             setTimeout(() => {
@@ -390,94 +433,86 @@ async function submitToBlockchain() {
         btn.innerHTML = '❌ ERROR';
         setTimeout(() => {
             btn.disabled = false;
-            btn.innerHTML = `<i class="fas fa-cube"></i> RE-TRY BATCH`;
+            btn.innerHTML = `<i class="fas fa-cube"></i> RETRY BATCH`;
         }, 3000);
     }
 }
 
-// ============================================
-// 5. INDUSTRIALIST: MARKETPLACE & COMPLIANCE
-// ============================================
-function loadMarketplace() {
-    // 1. Update Compliance Dashboard First
-    updateComplianceUI();
+// ==========================================
+// 4. CORPORATE MARKETPLACE ACTIONS
+// ==========================================
+const availableListings = [
+    { id: 1, type: "Agro-Forestry", location: "Uttar Pradesh", volume: 15.5, price: 0.05, verified: true },
+    { id: 2, type: "Bamboo Plantation", location: "Assam", volume: 50.0, price: 0.04, verified: true },
+    { id: 3, type: "Mangrove Restoration", location: "West Bengal", volume: 100.0, price: 0.08, verified: true },
+    { id: 4, type: "Biochar Application", location: "Punjab", volume: 25.0, price: 0.06, verified: true }
+];
 
-    // 2. Render Grid
+function loadMarketplace() {
     const grid = document.getElementById('market-grid');
+    if (!grid) return;
     grid.innerHTML = '';
 
-    const mockListings = [
-        { id: 1, name: "Rajesh Patel", loc: "Gujarat (Sec 4)", amount: "10.0 RCC", price: "0.05 ETH" },
-        { id: 2, name: "Anita Desai", loc: "Maharashtra", amount: "5.5 RCC", price: "0.025 ETH" },
-        { id: 3, name: "Green Corp", loc: "Karnataka", amount: "25.0 RCC", price: "0.12 ETH" }
-    ];
-
-    // Add My Listing (if unsold)
-    if (sessionData.farmer.listings.length > 0) {
-        const myListing = sessionData.farmer.listings[sessionData.farmer.listings.length - 1];
-        if (!myListing.isSold) {
-            mockListings.unshift({
-                id: 999, name: "YOU (Kavya Joshi)", loc: "Ahmedabad (Verified)",
-                amount: myListing.amount, price: "0.04 ETH", isMine: true
-            });
-        }
-    }
-
-    mockListings.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'listing-card';
-        card.innerHTML = `
-    < div style = "display:flex; justify-content:space-between; margin-bottom:10px;" >
-                <strong>${item.name}</strong>
-                <span style="color:var(--primary); font-size:12px"><i class="fas fa-check"></i> Verified</span>
-            </div >
-            <div style="color:#94a3b8; font-size:13px; margin-bottom:15px;">
-                <i class="fas fa-map-marker-alt"></i> ${item.loc}
-            </div>
-            <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between;">
-                    <span>Volume:</span> <strong style="color:#10b981">${item.amount}</strong>
+    availableListings.forEach(item => {
+        grid.innerHTML += `
+    <div class="listing-card">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <span class="badge" style="background: rgba(16,185,129,0.2); color: var(--primary);">
+                        <i class="fas fa-check-circle"></i> AI Verified
+                    </span>
+                    <strong>${item.volume} RCC</strong>
                 </div>
-                <div style="display:flex; justify-content:space-between; margin-top:5px;">
-                    <span>Price:</span> <strong>${item.price}</strong>
+                <h4>${item.type}</h4>
+                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">
+                    <i class="fas fa-map-marker-alt"></i> ${item.location}
+                </p>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong><i class="fab fa-ethereum" style="color:var(--text-muted)"></i> ${item.price}</strong>
+                    <button class="btn-primary" style="padding: 8px 16px; width: auto; font-size: 13px;" onclick="buyCredits(${item.id}, ${item.volume})">
+                        Purchase
+                    </button>
                 </div>
             </div>
-            <button class="btn-primary" style="width:100%" 
-                onclick="buyListing(this, ${item.id}, '${item.amount}')" 
-                ${item.isMine ? 'disabled' : ''}>
-                ${item.isMine ? 'OWNED BY YOU' : 'BUY CREDITS'}
-            </button>
-`;
-        grid.appendChild(card);
+    `;
     });
+    updateComplianceUI(); // Ensure compliance UI is updated when marketplace loads
 }
 
-function buyListing(btn, id, amountStr) {
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> BUYING...';
+function buyCredits(id, amount) {
+    showToast(`Initiating Smart Contract purchase of ${amount} RCC...`);
 
+    // Simulate Blockchain Tx
     setTimeout(() => {
-        btn.innerHTML = 'PURCHASED';
-        btn.style.background = '#334155';
-        showToast("Credits Purchased Successfully!", "success");
+        sessionData.buyer.credits += amount;
+        saveState(); // Save state after updating credits
 
-        // Update Balance
-        const amountVal = parseFloat(amountStr.split(' ')[0]);
-        sessionData.industrialist.rcc_balance += amountVal;
+        document.getElementById('indus-balance').innerText = `${sessionData.buyer.credits.toFixed(1)} RCC`;
 
-        // Mark as sold if it was ours
-        if (id === 999) {
-            sessionData.farmer.listings[sessionData.farmer.listings.length - 1].isSold = true;
+        let debt = sessionData.buyer.emissions - sessionData.buyer.credits;
+        if (debt <= 0) {
+            debt = 0;
+            sessionData.buyer.compliant = true;
+
+            const badge = document.getElementById('compliance-badge');
+            badge.className = "status-badge success";
+            badge.innerText = "FULLY COMPLIANT";
+
+            document.querySelector('.compliance-card').classList.add('safe');
         }
 
-        saveState();
-        updateComplianceUI(); // Refresh Progress Bar
+        document.getElementById('indus-debt').innerText = `${debt.toFixed(1)} Tons`;
 
-    }, 1000);
+        const prog = Math.min((sessionData.buyer.credits / sessionData.buyer.emissions) * 100, 100);
+        document.getElementById('progress-text').innerText = `${prog.toFixed(1)}% `;
+        document.getElementById('progress-fill').style.width = `${prog}% `;
+
+        showToast("Purchase Confirmed & Added to Registry");
+    }, 2000);
 }
 
 function updateComplianceUI() {
-    const totalGoal = sessionData.industrialist.target_emissions;
-    const current = sessionData.industrialist.rcc_balance;
+    const totalGoal = sessionData.buyer.emissions;
+    const current = sessionData.buyer.credits;
 
     // Calculate %
     let percent = (current / totalGoal) * 100;
@@ -537,8 +572,8 @@ function showToast(msg, type) {
     }
 
     // Set structure: text on left, optional close button logic
-    toast.innerHTML = `<span style="margin-right: 15px;">${msg}</span> 
-                       <i class="fas fa-times" style="cursor:pointer; opacity:0.7;"></i>`;
+    toast.innerHTML = `<span style="margin-right: 15px;">${msg}</span>
+    <i class="fas fa-times" style="cursor:pointer; opacity:0.7;"></i>`;
 
     toast.className = "toast show";
     toast.style.background = type === 'warning' ? '#f59e0b' : (type === 'success' ? '#10b981' : '#3b82f6');
@@ -555,8 +590,4 @@ function showToast(msg, type) {
     }, 4000);
 }
 
-// Initialize
-updateHeader('farmer');
-if (sessionData.farmer.verified_amount !== "0.0 RCC") {
-    restoreFarmerUI();
-}
+// Remove legacy initializers

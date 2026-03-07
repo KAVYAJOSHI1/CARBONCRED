@@ -30,10 +30,11 @@ CarbonVerse is built upon a professional three-role ecosystem to manage the enti
 
 To ensure every carbon credit is 100% real and accurate, uploaded images must pass through our strict "Gatekeeper" checks before they become valid credits:
 
-1. **Location Check (Geospatial):** We check the hidden GPS data in the photo to ensure the farmer is actually standing where they claim to be.
-2. **AI Vision Check (Deep Learning):** Our AI looks at the photo to confirm it actually contains trees or valid plants, and not just a picture of a wall or a car.
-3. **Anti-Fraud Check (pHash Duplicate Detection):** We generate a unique structural "fingerprint" of the photo. If a user tries to upload the exact same picture of a tree twice to get double credits, the system blocks it.
-4. **Biomass Calculation (YOLO Object Detection):** The AI counts the number of trees and estimates their size to scientifically calculate how many tons of CO2 they absorb.
+1. **Location Check (Geospatial & GEE):** We extract hidden GPS data from the photo to ensure the farmer is actually at the claimed location. We also cross-reference this with Google Earth Engine (GEE) satellite data to verify the NDVI (Vegetation Index) of that exact spot, making sure it corresponds to a natural environment.
+2. **Deep Fake & Screen Prevention (Intel DPT Depth Estimation):** To stop fraudsters from simply taking a picture of a tree on a computer screen, we use **DPT-Hybrid-Midas**. This AI model generates a 3D depth map of the image. Real forests have high depth variance (trees in front, sky in back), while a photo of a flat screen has zero variance. Flat images are instantly rejected!
+3. **Zero-Shot Object Classification (OpenAI CLIP):** To confirm the image actually contains valid biomass and even classify specific Indian species (e.g., Neem, Teak, Mango, or Sandalwood), we use **CLIP-ViT** (Contrastive Language-Image Pre-Training). Because it understands the complex relationship between text and images without needing massive retraining, it is incredibly accurate at rejecting unrelated objects (walls, cars) and focusing on true agriculture.
+4. **Volume & Counting (Google OWL-ViT):** To scientifically calculate the carbon absorbed, we use **OWL-ViT** (Vision Transformer for Open-World Localization). This state-of-the-art model draws bounding boxes around individual trees and foliage clusters. By combining this counting mechanism with hard algorithmic green-pixel density analysis (HSV Color Space mapping), we estimate the precise Carbon Tonnage.
+5. **Anti-Fraud Check (pHash Duplicate Detection):** We generate a unique structural "fingerprint" of the photo. If a user tries to upload the exact same picture of a tree twice to get double credits, the system blocks it on the blockchain ledger.
 
 ---
 

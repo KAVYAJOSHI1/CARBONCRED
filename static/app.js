@@ -359,32 +359,34 @@ async function submitToBlockchain() {
             // Logic Error (e.g. 200 OK but status="Error" from backend)
             // If we have detailed logs, show them instead of just erroring out
             if (data.batch_log && data.batch_log.length > 0) {
+                // ... logic to handle logs
                 sessionData.farmer.logs = data.batch_log;
                 saveState();
                 restoreFarmerUI();
 
-                // Specific toast message
+                // Specific toast message (temporary)
                 showToast("Verification Finished. See Report below.", "warning");
-
-                // Reset button state manually since we are not throwing error
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fas fa-cube"></i> RE-TRY BATCH`;
-
-                // Auto-scroll to results
-                setTimeout(() => {
-                    document.getElementById('batch-results').scrollIntoView({ behavior: 'smooth' });
-                }, 500);
             } else {
                 throw new Error(data.message || "Batch Rejected");
             }
+
+            // Always reset button if it was a soft reject with logs
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fas fa-cube"></i> RE-TRY BATCH`;
+
+            // Auto-scroll to results
+            setTimeout(() => {
+                const el = document.getElementById('batch-results');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }, 500);
         }
     } catch (error) {
         console.error(error);
-        showToast(error.message, "warning"); // Show actual error to user
+        showToast(error.message, "warning"); // The showToast function handles its own timeout
         btn.innerHTML = '❌ ERROR';
         setTimeout(() => {
             btn.disabled = false;
-            btn.innerHTML = `<i class="fas fa-cube"></i> RE-TRY BATCH`; // Restore button text properly
+            btn.innerHTML = `<i class="fas fa-cube"></i> RE-TRY BATCH`;
         }, 3000);
     }
 }
@@ -519,12 +521,34 @@ function clearData() {
     location.reload();
 }
 
+let toastTimeout = null;
+
 function showToast(msg, type) {
     const toast = document.getElementById('toast');
-    toast.innerText = msg;
+    if (!toast) return;
+
+    // Clear any existing timer to prevent hiding bugs if clicked rapidly
+    if (toastTimeout) {
+        clearTimeout(toastTimeout);
+    }
+
+    // Set structure: text on left, optional close button logic
+    toast.innerHTML = `<span style="margin-right: 15px;">${msg}</span> 
+                       <i class="fas fa-times" style="cursor:pointer; opacity:0.7;"></i>`;
+
     toast.className = "toast show";
     toast.style.background = type === 'warning' ? '#f59e0b' : (type === 'success' ? '#10b981' : '#3b82f6');
-    setTimeout(() => { toast.classList.remove('show'); }, 3000);
+
+    // Allow user to click the toast to dismiss immediately
+    toast.onclick = () => {
+        toast.classList.remove('show');
+        if (toastTimeout) clearTimeout(toastTimeout);
+    };
+
+    // Auto-hide after 4 seconds
+    toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+    }, 4000);
 }
 
 // Initialize

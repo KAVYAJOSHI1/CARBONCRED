@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>India CO2 | National Carbon Registry</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=2.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -160,15 +160,15 @@
                 <button id="btn-mint" class="btn-primary large" disabled onclick="submitToBlockchain()">
                     <i class="fas fa-cube"></i> VERIFY & MINT BATCH
                 </button>
+            </div>
 
-                <div id="batch-results" class="batch-results hidden">
-                    <div class="results-header">
-                        <h4><i class="fas fa-clipboard-list"></i> Verification Report</h4>
-                        <span id="batch-badge" class="badge">0 Files</span>
-                    </div>
-                    <!-- Detailed Result Cards will be injected here -->
-                    <div id="detailed-results-container" class="results-grid-vertical"></div>
+            <div id="batch-results" class="batch-results hidden" style="margin-top: 25px;">
+                <div class="results-header">
+                    <h4><i class="fas fa-clipboard-list"></i> Verification Report</h4>
+                    <span id="batch-badge" class="badge">0 Files</span>
                 </div>
+                <!-- Detailed Result Cards will be injected here -->
+                <div id="detailed-results-container" class="results-grid-vertical"></div>
             </div>
         </section>
 
@@ -224,7 +224,7 @@
 
     </main>
     <div id="toast" class="toast">Action Successful</div>
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=2.0"></script>
 </body>
 
 </html>

@@ -1,97 +1,179 @@
-# CarbonVerse: Enterprise Carbon Offset Verification
+# CarbonVerse (CARBONCRED)
 
-## Project Overview
+An AI-verified carbon credit platform: farmers upload geo-tagged photos of biomass, an AI pipeline verifies the claim, and a smart contract mints a carbon credit on-chain.
 
-Welcome to **CarbonVerse**, a next-generation decentralized platform designed to validate carbon offset claims using advanced Artificial Intelligence. 
+![Django](https://img.shields.io/badge/Django-backend-092E20?logo=django)
+![PyTorch](https://img.shields.io/badge/PyTorch-CLIP%20%2F%20OWL--ViT%20%2F%20DPT-EE4C2C?logo=pytorch&logoColor=white)
+![Solidity](https://img.shields.io/badge/Solidity-Sepolia-363636?logo=solidity)
+![Web3.py](https://img.shields.io/badge/Web3.py-Ethereum-F16822)
 
-Our system allows land owners to capture images of their trees and crops. These images are rigorously analyzed by our AI engine to prevent fraud, ensure data integrity, and accurately calculate how much carbon the plants absorb. These carbon credits can then be securely minted and purchased by corporate buyers to offset their emissions.
+## Table of Contents
 
----
+- [Overview](#overview)
+- [Problem Statement](#problem-statement)
+- [Solution](#solution)
+- [Current Scope](#current-scope)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [System Workflow](#system-workflow)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running Locally](#running-locally)
+- [API Documentation](#api-documentation)
+- [Author](#author)
 
-## The Three User Roles
+## Overview
 
-CarbonVerse is built upon a professional three-role ecosystem to manage the entire lifecycle of a carbon credit:
+CarbonVerse lets a landowner photograph their trees or crops and turns that photo into a verified, on-chain carbon credit. A multi-stage AI pipeline checks the photo is genuine (not a screen photo, not a duplicate, actually shows biomass, at the claimed GPS location) before a Solidity contract on Sepolia mints the credit to the farmer's wallet.
 
-### 1. The Offset Generator (Seller)
-**Who they are:** Farmers, landowners, or agro-forestry managers.
-**What they do:** They use the CarbonVerse app on their mobile devices to capture geo-tagged photos of their biomass (trees/crops). They upload this evidence to our AI engine to automatically generate and verify Carbon Credits.
+## Problem Statement
 
-### 2. Corporate Compliance (Buyer)
-**Who they are:** Businesses, industrialists, and corporations looking to reach "Net Zero" emissions.
-**What they do:** They access the CarbonVerse Marketplace to securely purchase AI-verified carbon credits from the Sellers, track their pollution debt, and manage their environmental compliance.
+Carbon credit issuance is normally a slow, manual verification process, and it's vulnerable to fraud: reused photos, staged images, or claims made from the wrong location. A farmer needs a fast, low-friction way to submit evidence, and the issuer needs confidence that evidence is real without a human reviewing every submission by hand.
 
-### 3. Network Overseer (Admin)
-**Who they are:** System administrators and protocol auditors.
-**What they do:** They have a God's-eye view of the entire network. They monitor active seller nodes, track the total volume of carbon credits generated, and ensure the system is running smoothly without fraudulent activity.
+## Solution
 
----
+Every uploaded photo runs through a chain of AI "gatekeeper" checks before any credit is minted: EXIF/GPS validation, an NDVI cross-check against satellite data, a monocular depth-estimation check to reject flat screen photos, zero-shot species/biomass classification, and a perceptual-hash duplicate check against previously approved uploads. Only images that pass every gate reach `mint_static_credit()`, which calls a deployed `CarbonCreditMarket.sol` contract on the Sepolia testnet via web3.py.
 
-## How the AI Magic Works (The Gatekeepers)
+## Current Scope
 
-To ensure every carbon credit is 100% real and accurate, uploaded images must pass through our strict "Gatekeeper" checks before they become valid credits:
+The three-role vision below (Seller / Buyer / Admin) is the target design. What's actually implemented today is the Seller/Offset-Generator flow: a farmer uploads a photo, it runs through the gatekeeper pipeline, and a credit is minted (`core/views.py` -> `test_mint_view`, the only API endpoint in `core/urls.py`). There is no Buyer marketplace and no Admin oversight dashboard in the codebase yet.
 
-1. **Location Check (Geospatial & GEE):** We extract hidden GPS data from the photo to ensure the farmer is actually at the claimed location. We also cross-reference this with Google Earth Engine (GEE) satellite data to verify the NDVI (Vegetation Index) of that exact spot, making sure it corresponds to a natural environment.
-2. **Deep Fake & Screen Prevention (Intel DPT Depth Estimation):** To stop fraudsters from simply taking a picture of a tree on a computer screen, we use **DPT-Hybrid-Midas**. This AI model generates a 3D depth map of the image. Real forests have high depth variance (trees in front, sky in back), while a photo of a flat screen has zero variance. Flat images are instantly rejected!
-3. **Zero-Shot Object Classification (OpenAI CLIP):** To confirm the image actually contains valid biomass and even classify specific Indian species (e.g., Neem, Teak, Mango, or Sandalwood), we use **CLIP-ViT** (Contrastive Language-Image Pre-Training). Because it understands the complex relationship between text and images without needing massive retraining, it is incredibly accurate at rejecting unrelated objects (walls, cars) and focusing on true agriculture.
-4. **Volume & Counting (Google OWL-ViT):** To scientifically calculate the carbon absorbed, we use **OWL-ViT** (Vision Transformer for Open-World Localization). This state-of-the-art model draws bounding boxes around individual trees and foliage clusters. By combining this counting mechanism with hard algorithmic green-pixel density analysis (HSV Color Space mapping), we estimate the precise Carbon Tonnage.
-5. **Anti-Fraud Check (pHash Duplicate Detection):** We generate a unique structural "fingerprint" of the photo. If a user tries to upload the exact same picture of a tree twice to get double credits, the system blocks it on the blockchain ledger.
+- **Offset Generator (Seller), implemented:** farmers/landowners capture geo-tagged biomass photos and submit them for AI-verified credit minting.
+- **Corporate Compliance (Buyer), planned, not yet built:** would let businesses purchase verified credits from a marketplace.
+- **Network Overseer (Admin), planned, not yet built:** would give system operators visibility into network-wide credit volume and fraud activity.
 
----
+## Features
 
-## Installation and Local Setup
+| Gatekeeper Check | How it works |
+|---|---|
+| Location Check | Extracts GPS from EXIF (`core/services/exif.py`) and validates it against the claimed coordinates within a distance tolerance (`core/services/geo.py`, haversine distance), cross-referenced against Sentinel/Google Earth Engine NDVI data (`core/services/ndvi.py`) |
+| Screen/Deepfake Prevention | Runs Intel's DPT-Hybrid-Midas depth model to check for real depth variance in the scene, rejecting flat images (e.g. a photo of a screen) |
+| Biomass Classification | Zero-shot classification with OpenAI CLIP to confirm the image contains valid biomass and identify species (Neem, Teak, Mango, etc.) |
+| Tree Counting & Volume | OWL-ViT draws bounding boxes around trees/foliage; combined with HSV green-pixel density analysis to estimate carbon tonnage per species (`core/ai_engine.py`) |
+| Duplicate Detection | Computes a perceptual hash (`imagehash.phash`) and checks it against previously approved uploads before minting; a separate exact-MD5 check also runs across a single batch upload |
+| On-Chain Minting | Calls `mintVerifiedCredit()` on a deployed `CarbonCreditMarket.sol` contract on Sepolia via web3.py |
 
-Follow these simple steps to get CarbonVerse running on your local machine.
+## Architecture
 
-### Prerequisites
-- **Python 3.9 or higher** installed on your computer.
-- **Git** (optional, for cloning the code).
+```mermaid
+flowchart TB
+    Upload["Farmer uploads photo(s)\n+ GPS coordinates"]
 
-### Step-by-Step Guide
+    subgraph Pipeline["core/ai_engine.py gatekeeper pipeline"]
+        EXIF["EXIF/GPS validation\n(services/exif.py, geo.py)"]
+        NDVI["NDVI cross-check\n(services/ndvi.py, Earth Engine)"]
+        DEPTH["Depth estimation\n(DPT-Hybrid-Midas)"]
+        CLIP["Zero-shot classification\n(CLIP-ViT)"]
+        OWLVIT["Tree counting\n(OWL-ViT)"]
+        DUP["Duplicate check\n(pHash, services/hash.py)"]
+    end
 
-#### 1. Configure the Environment
-The application needs some secret keys to work properly.
-- Look for a file named `.env.example` in the main folder.
-- Copy it and rename the copy to `.env`.
-- *(Optional)* If you are using real satellite data, you will need to add your Google Earth Engine (GEE) JSON key file to this folder and update the `.env` file to point to it.
+    CONTRACT["CarbonCreditMarket.sol\n(Sepolia)"]
+    DB[("SQLite/Postgres\nUpload, CarbonCreditData")]
 
-#### 2. Install Dependencies
-Open your terminal (Command Prompt or PowerShell) and navigate strictly into the project folder (`CARBONCRED-main`). Then, run this command to download all the necessary code libraries:
+    Upload --> EXIF --> NDVI --> DEPTH --> CLIP --> OWLVIT --> DUP
+    DUP -- "all checks pass" --> CONTRACT
+    CONTRACT --> DB
+```
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend framework | Django, Django REST Framework, django-cors-headers |
+| Computer vision / AI | PyTorch, Hugging Face `transformers` (CLIP, OWL-ViT, DPT-Hybrid-Midas), `timm`, Ultralytics, TensorFlow/tf-keras, OpenCV, Pillow, ImageHash |
+| Satellite / geospatial | Google Earth Engine API, Sentinel Hub |
+| Blockchain | Solidity (`CarbonCreditMarket.sol`), Ethereum Sepolia testnet, Web3.py |
+| Database | Django ORM (SQLite by default) |
+
+## Project Structure
+
+```
+CARBONCRED/
+├── core/
+│   ├── views.py               # test_mint_view: batch upload + mint endpoint
+│   ├── ai_engine.py            # Gatekeeper pipeline (depth, CLIP, OWL-ViT, NDVI, hash)
+│   ├── blockchain_utils.py     # web3.py contract calls (mint_static_credit, get_rcc_balance)
+│   ├── models.py               # CarbonCreditData, Upload
+│   ├── urls.py                 # landing, app, and /test-mint/ routes
+│   └── services/
+│       ├── exif.py             # EXIF GPS/timestamp extraction
+│       ├── geo.py              # Haversine distance, location/timestamp validation
+│       ├── ndvi.py             # Sentinel/GEE NDVI fetch + correlation
+│       ├── vision.py           # detect_tree, analyze_green_content
+│       └── hash.py             # Perceptual-hash duplicate check (DB-backed)
+├── contracts/
+│   └── CarbonCreditMarket.sol  # Solidity contract minting credits to farmer wallets
+├── backend/                     # Legacy/unused Django app, not in INSTALLED_APPS
+└── manage.py
+```
+
+`backend/` is a leftover app directory that isn't registered in `INSTALLED_APPS` or referenced anywhere; the active app is `core/`. `core/hash.py` (distinct from `core/services/hash.py`) is similarly dead code, unused by the pipeline.
+
+## System Workflow
+
+```mermaid
+sequenceDiagram
+    participant F as Farmer (client)
+    participant V as views.test_mint_view
+    participant AI as ai_engine pipeline
+    participant BC as blockchain_utils
+    participant SC as CarbonCreditMarket.sol (Sepolia)
+
+    F->>V: POST /test-mint/ (images, lat, lon)
+    V->>AI: Run gatekeeper checks per image
+    AI-->>V: Pass/reject + estimated carbon tonnage
+    V->>BC: mint_static_credit(wallet, tons) for passing images
+    BC->>SC: mintVerifiedCredit(wallet, amount)
+    SC-->>BC: transaction hash
+    BC-->>V: tx hash
+    V-->>F: Per-image results + minted credit summary
+```
+
+## Installation
+
 ```bash
+git clone https://github.com/KAVYAJOSHI1/CARBONCRED.git
+cd CARBONCRED
 pip install -r requirements.txt
 ```
 
-#### 3. Setup the Database (Migrations)
-Before running the app for the first time, you must set up the database structure. Run these two commands in order:
+## Configuration
 
-Make sure you have created the initial migration files:
+Copy `.env.example` to `.env` and set:
+
+| Variable | Purpose |
+|---|---|
+| `INFURA_URL` | RPC endpoint for the Sepolia testnet |
+| `PRIVATE_KEY` | Wallet key used to sign minting transactions |
+| `CONTRACT_ADDRESS` | Deployed address of `CarbonCreditMarket.sol` |
+
+Google Earth Engine credentials are required if you want live NDVI verification rather than a stubbed response.
+
+## Running Locally
+
 ```bash
 python manage.py makemigrations
-```
-
-Then, apply them to create the database:
-```bash
 python manage.py migrate
-```
-*Note: If you ever see an error like `no such column`, running `python manage.py migrate` usually fixes it!*
-
-#### 4. Start the Application Server
-Now you are ready to launch CarbonVerse! Run:
-```bash
 python manage.py runserver
 ```
-Open your web browser and go to: `http://127.0.0.1:8000/`
 
----
+Visit `http://127.0.0.1:8000/` for the landing page or `http://127.0.0.1:8000/app/` for the upload dashboard.
 
-## Testing on your Phone (Ngrok)
+To test camera/GPS capture from a phone, tunnel the local server with `ngrok http 8000` and open the forwarding URL on the device.
 
-If you want to test the camera and GPS features on your actual smartphone (as a Farmer would), you need to securely tunnel your local server to the internet so your phone can reach it.
+## API Documentation
 
-1. **Install Ngrok:** Download and install ngrok from their website.
-2. **Start the Tunnel:** While your Django server is running (from Step 4 above), open a *new* terminal window and run:
-   ```bash
-   ngrok http 8000
-   ```
-3. **Access on Phone:** Ngrok will give you a "Forwarding" link that looks something like `https://random-words.ngrok-free.dev`. Open this link on your phone's browser!
+Defined in `core/urls.py`.
 
-*(Make sure your phone gives the browser permission to use the Camera and Location services).*
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/test-mint/` | Upload one or more biomass images with `latitude`/`longitude`; runs the gatekeeper pipeline and mints a credit per passing image |
+| GET | `/` | Landing page |
+| GET | `/app/` | Upload dashboard |
+
+## Author
+
+Built by Kavya Joshi.
